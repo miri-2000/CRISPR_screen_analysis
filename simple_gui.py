@@ -1,7 +1,9 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
+
 import run_analysis
+from run_analysis import CRISPR_screen_analysis
 
 
 class SampleApp(tk.Tk):
@@ -207,7 +209,7 @@ class VisualizationPage(tk.Frame):
         self.create_widgets()
 
         # Button to navigate to ThirdPag
-        button1 = ttk.Button(self, text="Start computation", command=lambda: controller.show_frame(PageTwo))
+        button1 = ttk.Button(self, text="Start computation", command=self.start_computation)
         button1.grid()
 
     def create_widgets(self):
@@ -266,6 +268,10 @@ class VisualizationPage(tk.Frame):
     def on_entry_leave(self, event, entry_widget, default_text):
         if entry_widget.get() == "":
             entry_widget.insert(0, default_text)
+
+    def start_computation(self):
+        # Call the function from another file with self as the argument
+        run_analysis.CRISPR_screen_analysis(self)
 
 
 # Run the application

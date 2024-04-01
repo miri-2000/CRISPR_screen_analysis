@@ -47,62 +47,61 @@ log_ = log.getLogger(__name__)
 
 
 # Define the input parameters
-class Args:
-    essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\list_essentials_roderick.csv"
-    non_essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\non_essentials_roderick.csv"
-    library_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\broadgpp-brunello-library-contents.txt"
-    input_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset\input_data\7234_all_Brunello_library_target_genes-req.txt"
-    type = "biological"
-    unwanted_columns = ["guide_mm1_mismatch1", "mismatch1_", "nohit_cols", "guide_mm1_nohit"]
-    unwanted_rows = []
-    unwanted_row_substrings = [":mismatch"]
-    threshold = 0
-    target_samples = "t2_2d_tr,t2_3d_tr,t1_3d,t1_3d2d,t2_3d2d_ut,t2_3d2d_tr,t2_2d_tr,t2_2d_ut,t2_3d_tr,t2_3d_ut"
-    reference_samples = "t2_2d_ut,t2_3d_ut,t1_2d,t1_3d,t2_3d_ut,t2_3d_tr,t1_2d,t1_2d,t1_3d,t1_3d"
-    x_axis = "normZ"
-    threshold_fdr = 0.25
-    top = 15
-    distribution_condition1 = "t1_2d"
-    distribution_condition2 = "t0"
+# class Args:
+#     essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\list_essentials_roderick.csv"
+#     non_essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\non_essentials_roderick.csv"
+#     library_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\broadgpp-brunello-library-contents.txt"
+#     input_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset\input_data\7234_all_Brunello_library_target_genes-req.txt"
+#     type = "biological"
+#     unwanted_columns = ["guide_mm1_mismatch1", "mismatch1_", "nohit_cols", "guide_mm1_nohit"]
+#     unwanted_rows = []
+#     unwanted_row_substrings = [":mismatch"]
+#     threshold = 0
+#     target_samples = "t2_2d_tr,t2_3d_tr,t1_3d,t1_3d2d,t2_3d2d_ut,t2_3d2d_tr,t2_2d_tr,t2_2d_ut,t2_3d_tr,t2_3d_ut"
+#     reference_samples = "t2_2d_ut,t2_3d_ut,t1_2d,t1_3d,t2_3d_ut,t2_3d_tr,t1_2d,t1_2d,t1_3d,t1_3d"
+#     x_axis = "normZ"
+#     threshold_fdr = 0.25
+#     top = 15
+#     distribution_condition1 = "t1_2d"
+#     distribution_condition2 = "t0"
 
+def CRISPR_screen_analysis(args):
+    # Set a working directory (the results will be inserted here)
+    working_dir = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset"
+    os.chdir(working_dir)
 
-# Set a working directory (the results will be inserted here)
-working_dir = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset"
-os.chdir(working_dir)
+    # Extract the dataset identifier
+    dataset = os.path.basename(args.input_file).split('_')[0]
+    log_.info(f"Starting analysis for {dataset}\n")
 
-args = Args()
-# Extract the dataset identifier
-dataset = os.path.basename(args.input_file).split('_')[0]
-log_.info(f"Starting analysis for {dataset}\n")
+    # Define the names of the output files using the dataset identifier
+    args.output_file = f"{dataset}_data_prep.csv"
+    args.summary_file = f"{dataset}_counts_summary.csv"
+    args.normalized_file = f"{dataset}_norm.csv"
+    args.dataset = dataset
 
-# Define the names of the output files using the dataset identifier
-args.output_file = f"{dataset}_data_prep.csv"
-args.summary_file = f"{dataset}_counts_summary.csv"
-args.normalized_file = f"{dataset}_norm.csv"
-args.dataset = dataset
+    # Create the output directory for the results files and plots
+    args.output_folder = rf".\results"
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
+    os.chdir(args.output_folder)
 
-# Create the output directory for the results files and plots
-args.output_folder = rf".\results"
-if not os.path.exists(args.output_folder):
-    os.makedirs(args.output_folder)
-os.chdir(args.output_folder)
+    # Prepare the data for DrugZ
+    log_.info(f"Preparing dataset for hit identification\n")
+    Data_preparation.data_preparation(args)
 
-# Prepare the data for DrugZ
-log_.info(f"Preparing dataset for hit identification\n")
-Data_preparation.data_preparation(args)
+    # Perform the drugz analysis (additional optional parameters can be changed in 'run_drugz_try.py' if wanted)
+    log_.info(f"Performing DrugZ analysis")
+    run_script(r"C:\Users\Miriam\PycharmProjects\CRISPR_screen_analysis\run_drugz.py",
+               additional_args=[args.target_samples, args.reference_samples])
 
-# Perform the drugz analysis (additional optional parameters can be changed in 'run_drugz_try.py' if wanted)
-log_.info(f"Performing DrugZ analysis")
-run_script(r"C:\Users\Miriam\PycharmProjects\CRISPR_screen_analysis\run_drugz.py",
-           additional_args=[args.target_samples, args.reference_samples])
+    # Create drugZ log2 fold changes
+    log_.info(f"Calculating log2 fold-changes between the target and reference sample\n")
+    Result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt", target_samples=args.target_samples,
+                                        reference_samples=args.reference_samples,
+                                        essential_genes=args.essential_genes,
+                                        non_essential_genes=args.non_essential_genes, x_axis=args.x_axis,
+                                        threshold_fdr=args.threshold_fdr,
+                                        top=args.top)
 
-# Create drugZ log2 fold changes
-log_.info(f"Calculating log2 fold-changes between the target and reference sample\n")
-Result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt", target_samples=args.target_samples,
-                                    reference_samples=args.reference_samples,
-                                    essential_genes=args.essential_genes,
-                                    non_essential_genes=args.non_essential_genes, x_axis=args.x_axis,
-                                    threshold_fdr=args.threshold_fdr,
-                                    top=args.top)
-
-log_.info(f"Analysis for {dataset} complete\n")
+    log_.info(f"Analysis for {dataset} complete\n")
