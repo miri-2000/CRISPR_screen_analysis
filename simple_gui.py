@@ -1,6 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
+import run_analysis
 
 
 class SampleApp(tk.Tk):
@@ -187,83 +188,84 @@ class VisualizationPage(tk.Frame):
         # Header label
         header_label = ttk.Label(self, text="Visualization Settings",
                                  font=("Helvetica", 18, "bold"))
-        header_label.grid(row=0, column=0, columnspan=2)
+        header_label.grid(row=0, column=0, columnspan=3)
 
         # Text label
         text_label = ttk.Label(self,
-                               text="Optional result visualization settings (default values shown in line)",
+                               text="Optional result visualization settings (default values shown in line)\n",
                                justify="center")
-        text_label.grid(row=1, column=0, columnspan=2, pady=(5, 15))
+        text_label.grid(row=1, column=0, columnspan=3, pady=(5, 0))
 
         # Define class attributes
         self.x_axis_new = tk.StringVar()
         self.x_axis = tk.StringVar()
-        self.threshold_fdr = tk.IntVar(value=0.25)
-        self.top = tk.IntVar(value=15)
+        self.threshold_fdr = ttk.Entry(self)
+        self.top = ttk.Entry(self)
         self.distribution_condition1 = tk.StringVar()
         self.distribution_condition2 = tk.StringVar()
 
         self.create_widgets()
 
         # Button to navigate to ThirdPag
-        button2 = ttk.Button(self, text="Next Page", command=lambda: controller.show_frame(PageTwo))
-        button2.grid()
+        button1 = ttk.Button(self, text="Start computation", command=lambda: controller.show_frame(PageTwo))
+        button1.grid()
 
     def create_widgets(self):
+        # Text label
+        text_label = ttk.Label(self,
+                               text="Gene significance plots",
+                               font=("Helvetica", 10, "bold"))
+        text_label.grid(row=2, column=0,sticky="w",pady=(3,5))
+
+
         # Set the initial value of the selected option
         self.x_axis_new.set("normZ")  # Make Option 1 the default
 
         # Create radiobuttons with different text and values
-        ttk.Label(self, text="X-axis value for significant plots:").grid(row=2, column=0, sticky="w")
-        ttk.Radiobutton(self, text="normZ", variable=self.x_axis_new, value="normZ").grid(row=2, column=1)
-        ttk.Radiobutton(self, text="log2 fold-change", variable=self.x_axis_new, value="log2 fold-change").grid(row=2,
-                                                                                                                column=2)
+        ttk.Label(self, text="X-axis value for gene significance plots:").grid(row=3, column=0, sticky="w")
+        ttk.Radiobutton(self, text="normZ", variable=self.x_axis_new, value="normZ").grid(row=3, column=1, sticky="w")
+        ttk.Radiobutton(self, text="log2 fold-change", variable=self.x_axis_new, value="log2 fold-change").grid(row=3,
+                                                                                                                column=2, sticky="w")
         # ttk.Checkbutton(self, text="normZ value", variable=self.x_axis, onvalue="normZ", offvalue="").grid(row=2, column=1)
         # ttk.Checkbutton(self, text="log2 fold-change", variable=self.x_axis, onvalue="log2fc", offvalue="").grid(row=2, column=2)
 
-
         # Gene significance threshold
-        ttk.Label(self, text="Gene significance threshold:").grid(row=3, column=0, sticky="w")
-        self.entry = ttk.Entry(self)
-        self.entry.insert(0, "0.25")
-        self.entry.bind("<FocusIn>", self.on_entry_click)
-        self.entry.bind("<FocusOut>", self.on_entry_leave)
-        self.entry.grid(row=3, column=1)
-        ttk.Entry(self, textvariable=self.threshold_fdr).grid(row=3, column=1)
+        ttk.Label(self, text="Gene significance threshold:").grid(row=4, column=0, sticky="w")
+        self.threshold_fdr.insert(0, "0.25")
+        self.threshold_fdr.bind("<FocusIn>", lambda event: self.on_entry_click(event, self.threshold_fdr, "0.25"))
+        self.threshold_fdr.bind("<FocusOut>",
+                                lambda event: self.on_entry_leave(event, self.threshold_fdr, "0.25"))
+        self.threshold_fdr.grid(row=4, column=1)
 
         # Top hits entry
-        ttk.Label(self, text="Maximum number of hits:").grid(row=4, column=0, sticky="w")
-        ttk.Entry(self, textvariable=self.top).grid(row=4, column=1)
+        ttk.Label(self, text="Maximum number of hits:").grid(row=5, column=0, sticky="w")
+        self.top.insert(0, "15")
+        self.top.bind("<FocusIn>", lambda event: self.on_entry_click(event, self.top, "15"))
+        self.top.bind("<FocusOut>",
+                                lambda event: self.on_entry_leave(event, self.top, "15"))
+        self.top.grid(row=5, column=1)
+
+        # Text label
+        text_label = ttk.Label(self,
+                               text="Distribution Plots",
+                               font=("Helvetica", 10, "bold"))
+        text_label.grid(row=6, column=0,sticky="w",pady=(10,5))
 
         # Positive Control entry
-        ttk.Label(self, text="Positive Control:").grid(row=5, column=0, sticky="w")
-        ttk.Entry(self, textvariable=self.distribution_condition1).grid(row=5, column=1)
+        ttk.Label(self, text="Positive Control:").grid(row=7, column=0, sticky="w")
+        ttk.Entry(self, textvariable=self.distribution_condition1).grid(row=7, column=1)
 
         # Negative Control entry
-        ttk.Label(self, text="Negative Control:").grid(row=6, column=0, sticky="w")
-        ttk.Entry(self, textvariable=self.distribution_condition2).grid(row=6, column=1)
+        ttk.Label(self, text="Negative Control:").grid(row=8, column=0, sticky="w")
+        ttk.Entry(self, textvariable=self.distribution_condition2).grid(row=8, column=1)
 
-    def on_entry_click(self, event):
-        default_text = "0.25"
-        if self.entry.get() == default_text:
-            self.entry.delete(0, tk.END)
+    def on_entry_click(self, event, entry_widget, default_text):
+        if entry_widget.get() == default_text:
+            entry_widget.delete(0, tk.END)
 
-    def on_entry_leave(self, event):
-        default_text = "0.25"
-        if self.entry.get() == "":
-            self.entry.insert(0, default_text)
-
-
-class PageTwo(tk.Frame):
-    def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
-        label = ttk.Label(self, text="Page Two")
-        label.pack(pady=10, padx=10)
-
-        # Button to navigate to StartPage
-        button1 = ttk.Button(self, text="Go to Start Page",
-                             command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+    def on_entry_leave(self, event, entry_widget, default_text):
+        if entry_widget.get() == "":
+            entry_widget.insert(0, default_text)
 
 
 # Run the application
