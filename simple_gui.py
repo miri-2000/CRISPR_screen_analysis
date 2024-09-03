@@ -11,9 +11,9 @@ class BaseFrame(ttk.Frame):
         super().__init__(parent)
         self.controller = controller
 
-    def create_labeled_entry(self, label_text, textvariable, row):
+    def create_labeled_entry(self, label_text, command_action, textvariable, row):
         ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w")
-        ttk.Button(self, text="?", command=self.show_info, width=1).grid(row=row, column=0, sticky="e")
+        ttk.Button(self, text="?", command=command_action, width=1).grid(row=row, column=0, sticky="e")
         ttk.Entry(self, textvariable=textvariable).grid(row=row, column=1, sticky="w")
 
     def create_labeled_entry_with_threshold(self, label_text, row, threshold_entry):
@@ -92,7 +92,9 @@ class StartPage(BaseFrame):
         #     "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
         #            width=1).grid(row=2, column=0, sticky="e")
         # ttk.Entry(self, textvariable=self.target_samples).grid(row=2, column=1, sticky="w")
-        self.create_labeled_entry("Name of target samples:", self.target_samples, 2)
+        self.create_labeled_entry(label_text="Name of target samples:", command_action=lambda: self.show_info(
+            "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
+                                  textvariable=self.target_samples, row=2)
 
         # Add a label or star indicator next to each entry
         indicator_label = ttk.Label(self, text="")
@@ -104,7 +106,9 @@ class StartPage(BaseFrame):
         # ttk.Button(self, text="?", command=lambda: self.show_info("Baseline conditions (e.g. with no added drugs)"),
         #            width=1).grid(row=3, column=0, sticky="e")
         # ttk.Entry(self, textvariable=self.reference_samples).grid(row=3, column=1, sticky="w")
-        self.create_labeled_entry("Name of reference samples:", self.reference_samples, 3)
+        self.create_labeled_entry("Name of reference samples:",
+                                  lambda: self.show_info("Baseline conditions (e.g. with no added drugs)"),
+                                  self.reference_samples, 3)
 
         # Add a label or star indicator next to each entry
         indicator_label = ttk.Label(self, text="")
@@ -112,22 +116,18 @@ class StartPage(BaseFrame):
         self.indicator_labels["Name of reference samples:"] = indicator_label
 
         for i, (label_text, var) in enumerate(self.file_paths.items(), start=4):
-            ttk.Label(self, text=f"{label_text}:").grid(row=i, column=0, sticky="w")
-            # label = ttk.Label(self, text=f"{label_text}:")
-            # label.grid(row=i, column=0, sticky="w")
-            ttk.Button(self, text="?", command=lambda l=label_text: self.show_info(l), width=1).grid(row=i, column=0,
-                                                                                                     sticky="e")
-            # info_button = ttk.Button(self, text="?", command=lambda l=label_text: self.show_info(l), width=1)
-            # info_button.grid(row=i, column=0, sticky="e")
-            ttk.Entry(self, textvariable=var).grid(row=i, column=1, sticky="w")
-            # entry = ttk.Entry(self, textvariable=var)
-            # entry.grid(row=i, column=1, sticky="w")
+            self.create_labeled_entry(f"{label_text}:",
+                                      lambda l=label_text: self.show_info(l),
+                                      var, i)
+            # ttk.Label(self, text=f"{label_text}:").grid(row=i, column=0, sticky="w")
+            # ttk.Button(self, text="?", command=lambda l=label_text: self.show_info(l), width=1).grid(row=i, column=0,
+            #                                                                                          sticky="e")
+
+            # ttk.Entry(self, textvariable=var).grid(row=i, column=1, sticky="w")
+
             ttk.Button(self, text="Browse",
                        command=lambda var=self.file_paths[label_text]: self.browse_files(var)).grid(row=i, column=2,
                                                                                                     sticky="w")
-            # browse_button = ttk.Button(self, text="Browse",
-            #                            command=lambda var=self.file_paths[label_text]: self.browse_files(var))
-            # browse_button.grid(row=i, column=2, sticky="w")
 
             # Add a label or star indicator next to each entry
             indicator_label = ttk.Label(self, text="")
