@@ -15,7 +15,7 @@ import re
 from analysis_tools import assign_type, run_script
 import logging as log
 
-log.basicConfig(level=log.INFO)
+log.basicConfig(level=log.DEBUG)
 log_ = log.getLogger(__name__)
 
 
@@ -73,16 +73,17 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
 
     # Rename the first column to "sgRNA" to avoid inconsistent column names
     log_.debug("Renaming first column to 'sgRNA'")
+    print(cleaned_data.columns)
     cleaned_data.rename(columns={cleaned_data.columns[0]: "sgRNA"}, inplace=True)
 
     if unwanted_columns:
         # Remove unwanted columns
         log_.debug("Removing unwanted columns")
-        log_.debug(f"Columns to be removed: {', '.join(unwanted_columns)}")
+        log_.debug(f"Columns to be removed: {unwanted_columns}")
         # For this dataset: Remaining columns either contain the information for each condition or belong to "guide_mm1"
         length_before = len(cleaned_data.columns)
         cleaned_data = cleaned_data.drop(
-            columns=cleaned_data.filter(regex="|".join(unwanted_columns)))
+            columns=cleaned_data.filter(regex=unwanted_columns.replace(",", "|")))
         if length_before != len(cleaned_data.columns):
             log_.debug(
                 f"Number of columns before: {length_before}, after: {len(cleaned_data.columns)}, diff: {length_before - len(cleaned_data.columns)}")
@@ -93,8 +94,8 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
         # Remove rows with multi-matches (contain "multi:mismatch1" in column "name")
         log_.debug("Removing unwanted rows")
         log_.debug(
-            f"Rows containing (one of) the following in the sgRNA name will be removed: {', '.join(unwanted_rows)}")
-        rows_to_be_removed = cleaned_data["sgRNA"].str.contains('|'.join(unwanted_rows))
+            f"Rows containing (one of) the following in the sgRNA name will be removed: {unwanted_rows}")
+        rows_to_be_removed = cleaned_data["sgRNA"].str.contains(unwanted_rows.replace(",","|"))
         if any(rows_to_be_removed):
             log_.debug(
                 f"Number of rows before: {len(cleaned_data)}, after: {len(cleaned_data[~rows_to_be_removed])}, diff: {len(cleaned_data[rows_to_be_removed])}")
@@ -106,10 +107,10 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
         # Remove unwanted substrings from the gRNA column
         log_.debug("Removing unwanted substrings from rows of column sgRNA")
         log_.debug(
-            f"The following substrings will be removed from the sgRNA name: {', '.join(unwanted_row_substrings)}")
-        rows_to_be_edited = cleaned_data[cleaned_data["sgRNA"].str.contains('|'.join(unwanted_row_substrings))]
+            f"The following substrings will be removed from the sgRNA name: {unwanted_row_substrings}")
+        rows_to_be_edited = cleaned_data[cleaned_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",","|"))]
         if len(rows_to_be_edited) > 0:
-            for substring in unwanted_row_substrings:
+            for substring in unwanted_row_substrings.split(','):
                 cleaned_data['sgRNA'] = cleaned_data['sgRNA'].str.replace(substring + '.*', '', regex=True)
             log_.debug(f"Number of edited rows: {len(rows_to_be_edited)}")
         else:
@@ -285,20 +286,20 @@ def data_preparation(args):
     reads = reads.drop(columns=reads.filter(regex="guide_mm1"))
 
     # Remove the rows that have a total sum of counts below a certain threshold
-    if args.threshold == 0:
-        log_.debug(f"Removing sgRNAs with a sum over all columns of {args.threshold}")
+    if args.threshold_reads == 0:
+        log_.debug(f"Removing sgRNAs with a sum over all columns of {args.threshold_reads}")
     else:
-        log_.debug(f"Removing sgRNAs with a sum over all columns below {args.threshold}")
+        log_.debug(f"Removing sgRNAs with a sum over all columns below {args.threshold_reads}")
     # Calculate row sums for the data columns
     row_sums = reads.sum(numeric_only=True, axis=1)
     # Check if the sum of the total and filtered rows are the same
-    if len(reads) != len(reads[row_sums > args.threshold]):
+    if len(reads) != len(reads[row_sums > args.threshold_reads]):
         log_.debug(
-            f"Number of rows before filtering: {len(reads)}, after filtering: {len(reads[row_sums > args.threshold])}, "
-            f"difference: {len(reads[row_sums <= args.threshold])}")
-        reads = reads[row_sums > args.threshold]
+            f"Number of rows before filtering: {len(reads)}, after filtering: {len(reads[row_sums > args.threshold_reads])}, "
+            f"difference: {len(reads[row_sums <= args.threshold_reads])}")
+        reads = reads[row_sums > args.threshold_reads]
     else:
-        log_.debug(f"No sgRNAs count sums below {args.threshold} identified")
+        log_.debug(f"No sgRNAs count sums below {args.threshold_reads} identified")
 
     # Compare the cleaned data file with the given library file
     compare_with_library(reads, library, essential_genes, non_essential_genes)
