@@ -1,6 +1,10 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
+# from gui_base_frame import BaseFrame
+# from gui_page_one import StartPage
+# from gui_page_two import PageTwo
+# from gui_page_three import PageThree
 from run_analysis import CRISPR_screen_analysis
 import os
 
@@ -10,26 +14,26 @@ class BaseFrame(ttk.Frame):
         super().__init__(parent)
         self.controller = controller
 
-        self.invalid_paths = {}  # Dictionary to hold invalid paths
-        self.invalid_values = {}  # Dictionary to hold invalid paths
+        self.invalid_values = {}  # Dictionary to hold invalid values
+        self.invalid_file_types = {}  # Dictionary to hold invalid file types
+        self.invalid_folder_locations = {}  # Dictionary to hold invalid folder locations
         self.indicator_labels = {}
-        # self.threshold = ttk.Entry(self)
 
     def create_labeled_entry(self, label_text, command_action, textvariable, row):
-        ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w")
+        ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w", padx=(20, 0))
         ttk.Button(self, text="?", command=command_action, width=1).grid(row=row, column=0, sticky="e")
         ttk.Entry(self, textvariable=textvariable).grid(row=row, column=1, sticky="w")
 
-    def create_labeled_entry_with_threshold(self, label_text, row, threshold_entry, default_value):
-        ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w", padx=(0, 20))
-        ttk.Button(self, text="?", command=self.show_info, width=1).grid(row=row, column=0, sticky="e")
+    def create_labeled_entry_with_threshold(self, label_text, command_action, threshold_entry, default_value, row):
+        ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w", padx=20)
+        ttk.Button(self, text="?", command=command_action, width=1).grid(row=row, column=0, sticky="e")
         threshold_entry.insert(0, default_value)
         threshold_entry.bind("<FocusIn>", lambda event: self.on_entry_click(event, threshold_entry, default_value))
         threshold_entry.bind("<FocusOut>", lambda event: self.on_entry_leave(event, threshold_entry, default_value))
         threshold_entry.grid(row=row, column=1)
 
     def show_info(self, label_text):
-        messagebox.showinfo("Information", f"Information about {label_text}.")
+        messagebox.showinfo("Information", label_text)
 
     def on_entry_click(self, event, entry, default_text):
         if entry.get() == default_text:
@@ -39,28 +43,19 @@ class BaseFrame(ttk.Frame):
         if entry.get() == "":
             entry.insert(0, default_text)
 
-    def add_trace(self, value, label, check_path=True):
-        value.trace_add("write", self.update_indicator(value, label, check_path))
+    def add_trace(self, value, label, check):
+        value.trace_add("write", self.update_indicator(value, label, check))
 
-    def update_indicator(self, var, indicator_label, check_path):
+    def update_indicator(self, var, indicator_label, check):
         var_value = var.get()
         label_text = [k for k, v in self.indicator_labels.items() if v == indicator_label][0]
 
-        if check_path:
-            self.check_path_file(indicator_label, label_text, var_value)
-        else:
+        if check == "non_empty":
             self.check_empty_file(indicator_label, label_text, var_value)
-
-    def check_path_file(self, indicator_label, label_text, path):
-        print(f"Checking path: {path}")  # Debug print
-        if not os.path.exists(path) or not (path.endswith('.txt') or path.endswith('.csv')):
-            indicator_label.config(text=" * Invalid")
-            print(f"Path is invalid: {path}")  # Debug print
-            self.invalid_paths[label_text] = True
-        else:
-            indicator_label.config(text="")
-            print(f"Path is valid: {path}")  # Debug print
-            self.invalid_paths[label_text] = False
+        elif check == "file_type":
+            self.check_file_type(indicator_label, label_text, var_value)
+        elif check == "folder_location":
+            self.check_folder_location(indicator_label, label_text, var_value)
 
     def check_empty_file(self, indicator_label, label_text, var_value):
         if var_value.strip() == "":
@@ -70,14 +65,31 @@ class BaseFrame(ttk.Frame):
             indicator_label.config(text="")
             self.invalid_values[label_text] = False
 
-    # def validate_int_input(value_if_allowed):
-    #     if value_if_allowed == "":
-    #         try:
-    #             test = int(value_if_allowed).isdigit()  # Allow empty string or digits only
-    #             return True
-    #         except ValueError:
-    #             pass
-    #     return False
+    def check_file_type(self, indicator_label, label_text, path):
+        print(f"Checking path: {path}")  # Debug print
+        if not os.path.exists(path) or not (path.endswith('.txt') or path.endswith('.csv')):
+            indicator_label.config(text=" * Invalid")
+            print(f"Path is invalid: {path}")  # Debug print
+            self.invalid_file_types[label_text] = True
+        else:
+            indicator_label.config(text="")
+            print(f"Path is valid: {path}")  # Debug print
+            self.invalid_file_types[label_text] = False
+
+    def check_folder_location(self, indicator_label, label_text, path):
+        print(f"Checking path: {path}")  # Debug print
+        if not os.path.isdir(path):
+            indicator_label.config(text=" * Invalid")
+            print(f"Path is invalid: {path}")  # Debug print
+            self.invalid_folder_locations[label_text] = True
+        else:
+            indicator_label.config(text="")
+            print(f"Path is valid: {path}")  # Debug print
+            self.invalid_folder_locations[label_text] = False
+
+    def browse_files(self, output_variable):
+        file_path = filedialog.askopenfilename()
+        output_variable.set(file_path)
 
 
 class StartPage(BaseFrame):
@@ -88,7 +100,7 @@ class StartPage(BaseFrame):
         # Header label
         header_label = ttk.Label(self, text="Welcome to the CRISPR screen analysis tool",
                                  font=("Helvetica", 18, "bold"))
-        header_label.grid(row=0, column=0, columnspan=4)
+        header_label.grid(row=0, column=0, columnspan=3, padx=20)
 
         # Text label
         text_label = ttk.Label(self,
@@ -96,23 +108,12 @@ class StartPage(BaseFrame):
                                     "of drug-gene interactions using DrugZ! This tool is designed to analyze\n"
                                     "CRISPR screens and identify potential drug-gene interactions. To get started,\n"
                                     "please provide the following parameters:", justify="center")
-        text_label.grid(row=1, column=0, columnspan=4, pady=(5, 15))
+        text_label.grid(row=1, column=0, columnspan=3, pady=(5, 15), padx=20)
 
         self.controller = controller
-        # self.input_file = tk.StringVar()
-        # self.essential_genes = tk.StringVar()
-        # self.non_essential_genes = tk.StringVar()
-        # self.library_file = tk.StringVar()
-        # self.type = tk.StringVar()
-        # self.target_samples = tk.StringVar()
-        # self.reference_samples = tk.StringVar()
 
         # Define the file paths and associated labels
         self.file_paths = {
-            # "Screen Result File": self.input_file,
-            # "Essential Genes File": self.essential_genes,
-            # "Non-Essential Genes File": self.non_essential_genes,
-            # "Library File": self.library_file
             "Screen Result File": controller.shared_data["input_file"],
             "Essential Genes File": controller.shared_data["essential_genes"],
             "Non-Essential Genes File": controller.shared_data["non_essential_genes"],
@@ -149,7 +150,7 @@ class StartPage(BaseFrame):
 
         for i, (label_text, var) in enumerate(self.file_paths.items(), start=4):
             self.create_labeled_entry(f"{label_text}:",
-                                      lambda l=label_text: self.show_info(l),
+                                      lambda l=label_text: self.show_info(f"File path to the {l}"),
                                       var, i)
 
             ttk.Button(self, text="Browse",
@@ -161,18 +162,14 @@ class StartPage(BaseFrame):
             indicator_label.grid(row=i, column=3, sticky="w")
             self.indicator_labels[label_text] = indicator_label
 
-    def browse_files(self, output_variable):
-        file_path = filedialog.askopenfilename()
-        output_variable.set(file_path)
-
     def validate_and_proceed(self):
-        self.invalid_paths.clear()
+        self.invalid_file_types.clear()
         self.invalid_values.clear()
 
         self.add_trace(self.controller.shared_data["target_samples"], self.indicator_labels["Name of target samples:"],
-                       False)
+                       "non_empty")
         self.add_trace(self.controller.shared_data["reference_samples"],
-                       self.indicator_labels["Name of reference samples:"], False)
+                       self.indicator_labels["Name of reference samples:"], "non_empty")
 
         invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
         if invalid_value_labels:
@@ -181,15 +178,15 @@ class StartPage(BaseFrame):
                                    f"Please specify the parameters.")
 
         for label_text, var in self.file_paths.items():
-            self.add_trace(var, self.indicator_labels[label_text])
+            self.add_trace(var, self.indicator_labels[label_text], "file_type")
 
-        invalid_path_labels = [k for k, v in self.invalid_paths.items() if v is True]
-        if invalid_path_labels:
+        invalid_value_labels = [k for k, v in self.invalid_file_types.items() if v is True]
+        if invalid_value_labels:
             messagebox.showwarning("Invalid Paths",
-                                   f"The following paths are invalid: {', '.join(invalid_path_labels)}. The "
+                                   f"The following paths are invalid: {', '.join(invalid_value_labels)}. The "
                                    f"file path must be accurate and lead to a text or csv file.")
 
-        if not invalid_value_labels and not invalid_path_labels:
+        if not invalid_value_labels and not invalid_value_labels:
             self.controller.show_frame(PageTwo)
 
 
@@ -201,18 +198,15 @@ class PageTwo(BaseFrame):
         # Header label
         header_label = ttk.Label(self, text="Data Preparation Settings",
                                  font=("Helvetica", 18, "bold"))
-        header_label.grid(row=0, column=0)
+        header_label.grid(row=0, column=0, columnspan=3, padx=20)
 
         # Title label
         text_label = ttk.Label(self,
                                text="Optional data preparation settings (default values shown in line)")
         # ,justify="center")
-        text_label.grid(row=1, column=0, columnspan=2, pady=(5, 15))
+        text_label.grid(row=1, column=0, columnspan=3, pady=(5, 15), padx=20)
 
         # Define class attributes
-        # self.unwanted_columns = tk.StringVar()
-        # self.unwanted_rows = tk.StringVar()
-        # self.unwanted_row_substrings = tk.StringVar()
         self.threshold_reads_entry = ttk.Entry(self, textvariable=self.controller.shared_data["threshold_reads"])
 
         self.create_widgets()
@@ -225,19 +219,24 @@ class PageTwo(BaseFrame):
 
     def create_widgets(self):
         # Unwanted columns entry
-        self.create_labeled_entry("Unwanted Columns:", self.show_info, self.controller.shared_data["unwanted_columns"],
+        self.create_labeled_entry("Unwanted Columns:", lambda: self.show_info("Name of the unwanted columns"),
+                                  self.controller.shared_data["unwanted_columns"],
                                   2)
 
         # Unwanted rows entry
-        self.create_labeled_entry("Unwanted Rows:", self.show_info, self.controller.shared_data["unwanted_rows"], 3)
+        self.create_labeled_entry("Unwanted Rows:", lambda: self.show_info("Name of the unwanted rows"),
+                                  self.controller.shared_data["unwanted_rows"], 3)
 
         # Unwanted row substrings entry
-        self.create_labeled_entry("Unwanted Row Substrings:", self.show_info,
+        self.create_labeled_entry("Unwanted Row Substrings:", lambda: self.show_info("Name of the unwanted "
+                                                                                     "row substrings"),
                                   self.controller.shared_data["unwanted_row_substrings"], 4)
 
         # Min number of reads entry
-        self.create_labeled_entry_with_threshold("Minimum required sum of reads/guide:", 5,
-                                                 self.threshold_reads_entry, "0")
+        self.create_labeled_entry_with_threshold("Minimum required sum of reads/guide:",
+                                                 lambda: self.show_info("Minimum number of total reads/guide so that "
+                                                                        "the guide will not be discarded"),
+                                                 self.threshold_reads_entry, "0", 5)
 
 
 class PageThree(BaseFrame):
@@ -245,26 +244,22 @@ class PageThree(BaseFrame):
         super().__init__(parent, controller)
 
         # Header label
-        header_label = ttk.Label(self, text="Visualization Settings",
+        header_label = ttk.Label(self, text="Visualization and Storage Settings",
                                  font=("Helvetica", 18, "bold"))
         header_label.grid(row=0, column=0, columnspan=3)
 
         # Text label
         text_label = ttk.Label(self,
-                               text="Optional result visualization settings (default values shown in line)\n",
+                               text="Visualization settings (default values shown in line) and storage settings\n",
                                justify="center")
         text_label.grid(row=1, column=0, columnspan=3, pady=(5, 0))
 
         # Define class attributes
-        # self.x_axis = tk.StringVar()
-        # self.top = ttk.Entry(self)
+
         self.top_entry = ttk.Entry(self, textvariable=self.controller.shared_data["top"])
         self.threshold_fdr_entry = ttk.Entry(self, textvariable=self.controller.shared_data["threshold_fdr"])
-        # self.distribution_condition1 = tk.StringVar()
-        # self.distribution_condition2 = tk.StringVar()
         self.condition = {"Positive Control": self.controller.shared_data["distribution_condition1"],
                           "Negative Control": self.controller.shared_data["distribution_condition2"]}
-        # self.working_dir = tk.StringVar()
 
         self.create_widgets()
 
@@ -286,7 +281,9 @@ class PageThree(BaseFrame):
 
         # Create radiobuttons with different text and values
         ttk.Label(self, text="X-axis value:").grid(row=3, column=0, sticky="w")
-        ttk.Button(self, text="?", command=self.show_info, width=1).grid(row=3, column=0, sticky="e")
+        ttk.Button(self, text="?", command=lambda: self.show_info("Metric that should be taken for the x axis of the "
+                                                                  "distribution plot"), width=1).grid(row=3, column=0,
+                                                                                                      sticky="e")
         ttk.Radiobutton(self, text="normZ", variable=self.controller.shared_data["x_axis"], value="normZ").grid(
             row=3, column=1, sticky="w")
         ttk.Radiobutton(self, text="log2 fold-change", variable=self.controller.shared_data["x_axis"],
@@ -295,11 +292,16 @@ class PageThree(BaseFrame):
                                                        sticky="w")
 
         # Gene significance threshold
-        self.create_labeled_entry_with_threshold("Significance threshold:", 4, self.threshold_fdr_entry, "0.25")
+        self.create_labeled_entry_with_threshold("Significance threshold:",
+                                                 lambda: self.show_info("Genes with a FDR above the defined threshold "
+                                                                        "will not be considered significant"),
+                                                 self.threshold_fdr_entry, "0.25", 4)
 
         # Top hits entry
-        # self.create_labeled_entry_with_threshold("Number of hits per plot:", 5, self.top, "15")
-        self.create_labeled_entry_with_threshold("Number of hits per plot:", 5, self.top_entry, "15")
+        self.create_labeled_entry_with_threshold("Number of hits per plot:",
+                                                 lambda: self.show_info("Number defines the maximum number of genes "
+                                                                        "that will be displayed"),
+                                                 self.top_entry, "15", 5)
 
         # Title label
         text_label = ttk.Label(self,
@@ -308,7 +310,8 @@ class PageThree(BaseFrame):
         text_label.grid(row=6, column=0, sticky="w", pady=(10, 5))
 
         # Positive Control entry
-        self.create_labeled_entry("Positive Control:", self.show_info,
+        self.create_labeled_entry("Positive Control:", lambda: self.show_info("Sample that should be taken as the "
+                                                                              "positive control of the screen"),
                                   self.controller.shared_data["distribution_condition1"], 7)
 
         # Add a label or star indicator next to each entry
@@ -317,7 +320,8 @@ class PageThree(BaseFrame):
         self.indicator_labels["Positive Control"] = indicator_label
 
         # Negative Control entry
-        self.create_labeled_entry("Negative Control:", self.show_info,
+        self.create_labeled_entry("Negative Control:", lambda: self.show_info("Sample that should be taken as the "
+                                                                              "negative control of the screen"),
                                   self.controller.shared_data["distribution_condition2"], 8)
 
         # Add a label or star indicator next to each entry
@@ -325,28 +329,47 @@ class PageThree(BaseFrame):
         indicator_label.grid(row=8, column=2, sticky="w")
         self.indicator_labels["Negative Control"] = indicator_label
 
-        self.create_labeled_entry("Result storage location:", self.show_info,
+        # Title label
+        text_label = ttk.Label(self,
+                               text="Storage settings",
+                               font=("Helvetica", 10, "bold"))
+        text_label.grid(row=9, column=0, sticky="w", pady=(10, 5))
+
+        self.create_labeled_entry("Result storage location:",
+                                  lambda: self.show_info("Directory where the results should be stored"),
                                   self.controller.shared_data["working_dir"], 10)
-        # self.working_dir = self.working_dir.get()
+
+        ttk.Button(self, text="Browse",
+                   command=lambda: self.browse_files(self.controller.shared_data["working_dir"])).grid(row=10, column=2,
+                                                                                                       sticky="e")
+
+        # Add a label or star indicator next to each entry
+        indicator_label = ttk.Label(self, text="")
+        indicator_label.grid(row=10, column=3, sticky="w")
+        self.indicator_labels["Result storage location"] = indicator_label
 
     def validate_and_proceed(self):
         self.invalid_values.clear()
 
         for label_text, var in self.indicator_labels.items():
-            self.add_trace(self.condition[label_text], var, False)
+            if label_text != "Result storage location":
+                self.add_trace(self.condition[label_text], var, "non_empty")
+            else:
+                self.add_trace(self.controller.shared_data["working_dir"], var, "folder_location")
 
-        invalid_path_labels = [k for k, v in self.invalid_values.items() if v is True]
-        if invalid_path_labels:
+        invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
+        invalid_folder_location_labels = [k for k, v in self.invalid_folder_locations.items() if v is True]
+        if invalid_value_labels:
             messagebox.showwarning("Missing information",
-                                   f"The following fields cannot remain empty: {', '.join(invalid_path_labels)}. "
+                                   f"The following fields cannot remain empty: {', '.join(invalid_value_labels)}. "
                                    f"Please specify the parameters.")
+        elif invalid_folder_location_labels:
+            messagebox.showwarning("Not a directory",
+                                   f"The following field/s is/are not (a) directory/ies: {', '.join(invalid_value_labels)}. "
+                                   f"Please specify a valid folder location to store the results.")
         else:
             self.start_computation()
 
-    # def convert_stringvars_to_str(self):
-    #     for attr_name, attr_value in self.__dict__.items():
-    #         if isinstance(attr_value, tk.StringVar):
-    #             self.__dict__[attr_name] = attr_value.get()
     def save_shared_data(self):
         # Iterate through shared_data and store values as strings
         for key, variable in self.controller.shared_data.items():
@@ -373,7 +396,6 @@ class PageThree(BaseFrame):
         CRISPR_screen_analysis(self)
 
 
-# Run the application
 class SampleApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -381,6 +403,8 @@ class SampleApp(tk.Tk):
         # Create a container to hold multiple frames
         container = tk.Frame(self)
         container.grid(row=0, column=0, sticky="nsew")
+
+        # Allow the container to resize with the window
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
