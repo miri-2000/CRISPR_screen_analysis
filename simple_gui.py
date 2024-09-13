@@ -93,7 +93,6 @@ class BaseFrame(ttk.Frame):
 
 
 class StartPage(BaseFrame):
-    # class StartPage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
 
