@@ -3,6 +3,8 @@
 # Last modified 19.11.2023
 # ------------------------------------
 import logging as log
+from pathlib import Path
+
 import pandas as pd
 import numpy as np
 from analysis_tools import run_script, assign_type
@@ -102,7 +104,7 @@ def create_drugz_log2fc(drugz_input, target_samples, reference_samples, essentia
     # Start the execution of R_analysis_2
     log_.info("Creating significance plots\n")
     log2fc_all = r".\drugz_log2fcs_all.csv"
-    run_script(r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program files\R_analysis_2.R",
+    run_script(rf"{Path(__file__).parents[0]}\R_analysis_2.R",
                additional_args=[log2fc_all, ",".join(target_samples), ",".join(reference_samples), x_axis,
                                 str(threshold_fdr),
                                 str(top)])
