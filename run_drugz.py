@@ -3,7 +3,7 @@
 # by the user.
 # Last modified 19.11.2023
 # ------------------------------------
-import DrugZ
+import drugZ
 import os
 import fnmatch
 import sys

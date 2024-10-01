@@ -38,8 +38,8 @@
 # ---------------------------------------------------------------------------------------------------
 from pathlib import Path
 
-import Data_preparation
-import Result_analysis
+import data_preparation
+import result_analysis
 from analysis_tools import run_script
 import os
 import logging as log
@@ -50,13 +50,13 @@ log_ = log.getLogger(__name__)
 
 # Define the input parameters
 class Args:
-    working_dir = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\results"
+    working_dir = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test"
     essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\list_essentials_roderick.csv"
     non_essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\non_essentials_roderick.csv"
     library_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\broadgpp-brunello-library-contents.txt"
     input_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset\input_data\7234_all_Brunello_library_target_genes-req.txt"
     type = "biological"
-    unwanted_columns= "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
+    unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
     unwanted_rows = ""
     unwanted_row_substrings = ":mismatch"
     threshold_reads = 0
@@ -67,6 +67,7 @@ class Args:
     top = 15
     distribution_condition1 = "t1_2d"
     distribution_condition2 = "t0"
+
 
 def CRISPR_screen_analysis(args):
     # Set a working directory (the results will be inserted here)
@@ -109,4 +110,5 @@ def CRISPR_screen_analysis(args):
 
     log_.info(f"Analysis for {dataset} complete\n")
 
-CRISPR_screen_analysis(Args)
+
+# CRISPR_screen_analysis(Args)

@@ -9,6 +9,7 @@
 # 5) store the cleaned table in a csv file
 # 7) Call the R script "R_analysis_1" to normalize the read counts and create raw and normalized plots
 # ------------------------------------
+from pathlib import Path
 
 import pandas as pd
 import re
@@ -95,7 +96,7 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
         log_.debug("Removing unwanted rows")
         log_.debug(
             f"Rows containing (one of) the following in the sgRNA name will be removed: {unwanted_rows}")
-        rows_to_be_removed = cleaned_data["sgRNA"].str.contains(unwanted_rows.replace(",","|"))
+        rows_to_be_removed = cleaned_data["sgRNA"].str.contains(unwanted_rows.replace(",", "|"))
         if any(rows_to_be_removed):
             log_.debug(
                 f"Number of rows before: {len(cleaned_data)}, after: {len(cleaned_data[~rows_to_be_removed])}, diff: {len(cleaned_data[rows_to_be_removed])}")
@@ -108,7 +109,7 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
         log_.debug("Removing unwanted substrings from rows of column sgRNA")
         log_.debug(
             f"The following substrings will be removed from the sgRNA name: {unwanted_row_substrings}")
-        rows_to_be_edited = cleaned_data[cleaned_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",","|"))]
+        rows_to_be_edited = cleaned_data[cleaned_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",", "|"))]
         if len(rows_to_be_edited) > 0:
             for substring in unwanted_row_substrings.split(','):
                 cleaned_data['sgRNA'] = cleaned_data['sgRNA'].str.replace(substring + '.*', '', regex=True)
@@ -250,7 +251,7 @@ def data_preparation(args):
     Perform pre-processing to establish whether the quality of the screen output is
     good enough to continue with the hit identification.
 
-    :param args: All input parameters stated in the run_analysis.py file
+    :param args: All input parameters stated in the start_program.py file
 
     :return:
     """
@@ -311,7 +312,7 @@ def data_preparation(args):
     log_.info("Normalizing data and creating quality control plots\n")
     # Remove the replicate notation ("_r1") from the condition names
     conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
-    run_script(r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program files\R_analysis_1.R",
+    run_script(rf"{Path(__file__).parents[0]}\R_analysis_1.R",
                additional_args=[args.output_file, args.dataset, ",".join(conditions_new), "biological",
                                 args.target_samples, args.reference_samples, args.distribution_condition1,
                                 args.distribution_condition2])
