@@ -1,31 +1,33 @@
-# Python VERSION = "3.10"
+# Python VERSION = "3.12"
 # ---------------------------------------------------------------------------------------------------
-# run_analysis: Script for the identification of drug-gene interactions in CRISPR screens using DrugZ
+# Script for the identification of drug-gene interactions in CRISPR screens using DrugZ
 # Last modified 19 November 2023
 # Free to modify and redistribute
 # ---------------------------------------------------------------------------------------------------
 # This file provides the full control over the entire analysis. Any inputs that need to be defined are stated here.
 # For details on how to adapt this file for new CRISPR screen analyses, please refer to the documentation.
-# ------------------------------------
-## Parameters
-# input_file: txt file containing the raw read counts for each gRNA from the CRISPR screen
-# essential_genes: csv file that contains list of essential genes to mark them in dataset (type='p')
-# non_essential_genes: csv file that contains list of non-essential genes to mark them in dataset (type='n')
-# library_file: txt file that is used as a reference to compare current dataset with
-# output_file: output filename to write the output data file into
-# summary_file: output filename to write the counts summary file into
-# normalized_file: output filename to write the normalized read counts into
-# type:# used as basis to create correlation plots (if type=='biological' analysis is done assuming replicates
-#   are biological replicates; vice versa for 'technical')
-# unwanted_columns: columns that should be removed from the input file
-# unwanted_rows: rows that should be removed from the input file
-# unwanted_row_substrings: substrings that should be removed from gRNA names
-# threshold: minimal overall read count over all conditions for one gRNA
-# threshold_fdr: max FDR for a gene to be considered significant
-# target_samples: the names of the target conditions
-# reference_samples: the names of the reference/control samples
+# ---------------------------------------------------------------------------------------------------
+# Parameters
+
+# target_samples: Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions
+# reference_samples: Baseline conditions (e.g. with no added drugs)
+# input_file: Text file containing the raw read counts for each gRNA from the CRISPR screen
+# essential_genes: CSV file that contains list of essential genes to mark them in dataset (type='p')
+# non_essential_genes: CSV file that contains list of non-essential genes to mark them in dataset (type='n')
+# library_file: Text file that is used as a reference to compare current dataset with
+# unwanted_columns: Columns that should be removed from the input file
+# unwanted_rows: Rows that should be removed from the input file
+# unwanted_row_substrings: Row substrings that should be removed from gRNA names
+# threshold: Minimum number of total reads/guide so that the guide will not be discarded
+# x_axis: Metric that should be taken for the x axis of the distribution plot
+# threshold_fdr: Maximum FDR for a gene to be considered significant
+# top: Maximum number of significant genes that will be displayed
+# distribution_condition1: Sample that should be taken as the positive control of the screen
+# distribution_condition2: Sample that should be taken as the negative control of the screen
+# working_dir: Directory where the results should be stored
+# replicate_type:Defines whether replicate samples are biological or technical replicates
 # -----------------------------------------------------------------------------------------------------
-## Expected structure of the input data file
+# Expected structure of the input data file
 # all annotation columns contain non-numerical data while data columns only have numerical values
 # the first two columns contain the sgRNA names and sequences
 # the file requires a nohit row
@@ -37,7 +39,6 @@
 # the input file has annotation columns that are identified by being the only non-numerical columns
 # ---------------------------------------------------------------------------------------------------
 from pathlib import Path
-
 import data_preparation
 import result_analysis
 from analysis_tools import run_script
@@ -46,27 +47,6 @@ import logging as log
 
 log.basicConfig(level=log.DEBUG)
 log_ = log.getLogger(__name__)
-
-
-# Define the input parameters
-class Args:
-    working_dir = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test"
-    essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\list_essentials_roderick.csv"
-    non_essential_genes = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\non_essentials_roderick.csv"
-    library_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Program data\broadgpp-brunello-library-contents.txt"
-    input_file = r"D:\D\Ausbildung\Master\1st year\Internships\NKI\Report\Program test\Datasets to be analysed\dataset\input_data\7234_all_Brunello_library_target_genes-req.txt"
-    type = "biological"
-    unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
-    unwanted_rows = ""
-    unwanted_row_substrings = ":mismatch"
-    threshold_reads = 0
-    target_samples = "t2_2d_tr,t2_3d_tr,t1_3d,t1_3d2d,t2_3d2d_ut,t2_3d2d_tr,t2_2d_tr,t2_2d_ut,t2_3d_tr,t2_3d_ut"
-    reference_samples = "t2_2d_ut,t2_3d_ut,t1_2d,t1_3d,t2_3d_ut,t2_3d_tr,t1_2d,t1_2d,t1_3d,t1_3d"
-    x_axis = "normZ"
-    threshold_fdr = 0.25
-    top = 15
-    distribution_condition1 = "t1_2d"
-    distribution_condition2 = "t0"
 
 
 def CRISPR_screen_analysis(args):
@@ -92,7 +72,7 @@ def CRISPR_screen_analysis(args):
 
     # Prepare the data for DrugZ
     log_.info(f"Preparing dataset for hit identification\n")
-    Data_preparation.data_preparation(args)
+    data_preparation.data_preparation(args)
 
     # Perform the drugz analysis (additional optional parameters can be changed in 'run_drugz_try.py' if wanted)
     log_.info(f"Performing DrugZ analysis")
@@ -101,7 +81,7 @@ def CRISPR_screen_analysis(args):
 
     # Create drugZ log2 fold changes
     log_.info(f"Calculating log2 fold-changes between the target and reference sample\n")
-    Result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt", target_samples=args.target_samples,
+    result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt", target_samples=args.target_samples,
                                         reference_samples=args.reference_samples,
                                         essential_genes=args.essential_genes,
                                         non_essential_genes=args.non_essential_genes, x_axis=args.x_axis,
@@ -109,6 +89,3 @@ def CRISPR_screen_analysis(args):
                                         top=args.top)
 
     log_.info(f"Analysis for {dataset} complete\n")
-
-
-# CRISPR_screen_analysis(Args)

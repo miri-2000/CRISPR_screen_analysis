@@ -313,7 +313,7 @@ def data_preparation(args):
     # Remove the replicate notation ("_r1") from the condition names
     conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
     run_script(rf"{Path(__file__).parents[0]}\R_analysis_1.R",
-               additional_args=[args.output_file, args.dataset, ",".join(conditions_new), "biological",
+               additional_args=[args.output_file, args.dataset, ",".join(conditions_new), args.replicate_type,
                                 args.target_samples, args.reference_samples, args.distribution_condition1,
                                 args.distribution_condition2])
     log_.debug("Finished Data preparation")

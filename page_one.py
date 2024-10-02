@@ -1,26 +1,13 @@
-import tkinter as tk
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
-from tkinter import filedialog, messagebox
-import os
+from tkinter import messagebox
 
 
 class StartPage(BaseFrame):
+    """Start page of the CRISPR screen analysis tool."""
+
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-
-        # Header label
-        header_label = ttk.Label(self, text="Welcome to the CRISPR screen analysis tool",
-                                 font=("Helvetica", 18, "bold"))
-        header_label.grid(row=0, column=0, columnspan=3, padx=20)
-
-        # Text label
-        text_label = ttk.Label(self,
-                               text="Welcome to the CRISPR screen analysis tool for the identification\n"
-                                    "of drug-gene interactions using DrugZ! This tool is designed to analyze\n"
-                                    "CRISPR screens and identify potential drug-gene interactions. To get started,\n"
-                                    "please provide the following parameters:", justify="center")
-        text_label.grid(row=1, column=0, columnspan=3, pady=(5, 15), padx=20)
 
         self.controller = controller
 
@@ -32,23 +19,25 @@ class StartPage(BaseFrame):
             "Library File": controller.shared_data["library_file"]
         }
 
-        self.tracers_added = False  # Flag to check if tracers are added
-
+        self.create_header("Welcome to the CRISPR screen analysis tool")
+        self.create_description("Welcome to the CRISPR screen analysis tool for the identification\n"
+                                "of drug-gene interactions using DrugZ! This tool is designed to analyze\n"
+                                "CRISPR screens and identify potential drug-gene interactions. To get started,\n"
+                                "please provide the following parameters:")
         self.create_widgets()
 
         # Button to navigate to the next page
-        ttk.Button(self, text="Next Page", command=self.validate_and_proceed).grid(row=9, column=1, pady=20)
+        ttk.Button(self, text="Next", command=self.validate_and_proceed).grid(row=9, column=1, pady=20)
 
     def create_widgets(self):
+        """Create input fields and buttons for user parameters."""
         # Targets entry
         self.create_labeled_entry(label_text="Name of target samples:", command_action=lambda: self.show_info(
             "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
                                   textvariable=self.controller.shared_data["target_samples"], row=2)
 
         # Add a label or star indicator next to each entry
-        indicator_label = ttk.Label(self, text="")
-        indicator_label.grid(row=2, column=3, sticky="w")
-        self.indicator_labels["Name of target samples:"] = indicator_label
+        self.add_indicator_label(row=2, label_text="Name of target samples:")
 
         # References entry
         self.create_labeled_entry("Name of reference samples:",
@@ -56,25 +45,21 @@ class StartPage(BaseFrame):
                                   self.controller.shared_data["reference_samples"], 3)
 
         # Add a label or star indicator next to each entry
-        indicator_label = ttk.Label(self, text="")
-        indicator_label.grid(row=3, column=3, sticky="w")
-        self.indicator_labels["Name of reference samples:"] = indicator_label
+        self.add_indicator_label(row=3, label_text="Name of reference samples:")
 
         for i, (label_text, var) in enumerate(self.file_paths.items(), start=4):
             self.create_labeled_entry(f"{label_text}:",
                                       lambda l=label_text: self.show_info(f"File path to the {l}"),
                                       var, i)
 
-            ttk.Button(self, text="Browse",
-                       command=lambda var=self.file_paths[label_text]: self.browse_files(var)).grid(row=i, column=2,
-                                                                                                    sticky="w")
+            # Create a browse button
+            self.create_browse_button(var, row=i)
 
             # Add a label or star indicator next to each entry
-            indicator_label = ttk.Label(self, text="")
-            indicator_label.grid(row=i, column=3, sticky="w")
-            self.indicator_labels[label_text] = indicator_label
+            self.add_indicator_label(row=i, label_text=label_text)
 
     def validate_and_proceed(self):
+        """Validate input fields and navigate to the next page if valid."""
         self.invalid_file_types.clear()
         self.invalid_values.clear()
 
@@ -83,26 +68,28 @@ class StartPage(BaseFrame):
         self.add_trace(self.controller.shared_data["reference_samples"],
                        self.indicator_labels["Name of reference samples:"], "non_empty")
 
-        invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
-        if invalid_value_labels:
-            messagebox.showwarning("Missing information",
-                                   f"The following fields cannot remain empty: {', '.join(invalid_value_labels)}. "
-                                   f"Please specify the parameters.")
+        invalid_value_flag = self.check_invalid_values()
+        invalid_file_type_flag = self.check_invalid_file_types()
 
+        if not invalid_value_flag and not invalid_file_type_flag:
+            self.controller.show_frame(self.get_next_class())
+
+    def check_invalid_file_types(self):
+        """Check for any invalid file types."""
         for label_text, var in self.file_paths.items():
             self.add_trace(var, self.indicator_labels[label_text], "file_type")
 
         invalid_value_labels = [k for k, v in self.invalid_file_types.items() if v is True]
         if invalid_value_labels:
-            messagebox.showwarning("Invalid Paths",
+            messagebox.showwarning("Invalid File Paths/Types",
                                    f"The following paths are invalid: {', '.join(invalid_value_labels)}. The "
                                    f"file path must be accurate and lead to a text or csv file.")
-
-        if not invalid_value_labels and not invalid_value_labels:
-            self.controller.show_frame(self.get_next_class())
+            return True
 
     @staticmethod
     def get_next_class():
+        """Get the next class for navigation."""
         from page_two import PageTwo
+
         # Return the next class
         return PageTwo

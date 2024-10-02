@@ -20,6 +20,7 @@ class BaseFrame(ttk.Frame):
         invalid_folder_locations (dict): Dictionary to hold invalid folder locations.
         indicator_labels (dict): Dictionary to hold indicator label references.
     """
+
     def __init__(self, parent, controller):
         """
         Initializes the BaseFrame.
@@ -35,6 +36,24 @@ class BaseFrame(ttk.Frame):
         self.invalid_file_types = {}
         self.invalid_folder_locations = {}
         self.indicator_labels = {}
+
+    def create_header(self, header_text):
+        """Create header label for the page."""
+        header_label = ttk.Label(self, text=header_text,
+                                 font=("Helvetica", 18, "bold"))
+        header_label.grid(row=0, column=0, columnspan=3, padx=20)
+
+    def create_description(self, description_text):
+        """Create description label for the page."""
+        text_label = ttk.Label(self,
+                               text=description_text, justify="center")
+        text_label.grid(row=1, column=0, columnspan=3, pady=(5, 15), padx=20)
+
+    def create_subheader(self, subtitle_text, row):
+        text_label = ttk.Label(self,
+                               text=subtitle_text,
+                               font=("Helvetica", 10, "bold"))
+        text_label.grid(row=row, column=0, sticky="w", pady=(3, 5), padx=20)
 
     def create_labeled_entry(self, label_text, command_action, textvariable, row, default_value=None):
         """
@@ -60,6 +79,16 @@ class BaseFrame(ttk.Frame):
             textvariable.insert(0, default_value)
             self.bind_entry_focus(textvariable, default_value)
             textvariable.grid(row=row, column=1, sticky="w")
+
+    def create_browse_button(self, var, row):
+        """Create a browse button for file selection."""
+        ttk.Button(self, text="Browse", command=lambda: self.browse_files(var)).grid(row=row, column=2, sticky="w")
+
+    def add_indicator_label(self, row, label_text):
+        """Add an indicator label for validation feedback."""
+        indicator_label = ttk.Label(self, text="")
+        indicator_label.grid(row=row, column=3, sticky="w")
+        self.indicator_labels[label_text] = indicator_label
 
     @staticmethod
     def show_info(label_text):
@@ -182,6 +211,15 @@ class BaseFrame(ttk.Frame):
             indicator_label.config(text="")
             log_.debug(f"Path is valid: {path}")
             self.invalid_folder_locations[label_text] = False
+
+    def check_invalid_values(self):
+        """Check for any invalid input values."""
+        invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
+        if invalid_value_labels:
+            messagebox.showwarning("Missing information",
+                                   f"The following fields cannot remain empty: {', '.join(invalid_value_labels)}. "
+                                   f"Please specify the parameters.")
+            return True
 
     @staticmethod
     def browse_files(output_variable):

@@ -33,6 +33,7 @@ class SampleApp(tk.Tk):
                             'top': tk.StringVar(),
                             'distribution_condition1': tk.StringVar(),
                             'distribution_condition2': tk.StringVar(),
+                            'replicate_type': tk.StringVar(),
                             'working_dir': tk.StringVar()
                             }
 
