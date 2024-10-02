@@ -1,7 +1,7 @@
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
 from tkinter import messagebox
-from start_program import CRISPR_screen_analysis
+from start_program import CRISPRScreenAnalysis
 
 
 class PageThree(BaseFrame):
@@ -141,7 +141,7 @@ class PageThree(BaseFrame):
         self.save_shared_data()
 
         # Call the CRISPR screen analysis program
-        CRISPR_screen_analysis(self)
+        CRISPRScreenAnalysis(self)
 
     def save_shared_data(self):
         """Store the user input data for the start of the CRISPR screen analysis program."""

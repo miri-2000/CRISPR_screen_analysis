@@ -1,5 +1,6 @@
 # DRUGZ (modified version): Script for the identification of drug-gene interactions in
 # paired sample genomic perturbation screens
+# original version: https://github.com/hart-lab/drugz
 # Last modified 19.11.2023
 # ------------------------------------
 import sys
@@ -24,7 +25,8 @@ min_reads_thresh = 1
 
 
 # ------------------------------------
-## Parameters
+# Parameters
+
 # infile = input read counts matrix (first column is expected to contain the gene name, file is expected to be
 # tab-delimited)
 # drugz_output_file = output filename in which you will write the drugz results
@@ -276,7 +278,7 @@ def calculate_gene_drugz_score(per_gene_score, min_observations):
     return per_gene_results
 
 
-def write_drugZ_output(outfile, output):
+def write_drugz_output(outfile, output):
     """
     Function that writes DrugZ results to a file.
 
@@ -369,7 +371,7 @@ def calculate_unpaired_foldchange(reads, normalized_counts, target_sample, refer
     return fold_change
 
 
-def drugZ_analysis(args):
+def drugz_analysis(args):
     """ Call all functions and run DrugZ analysis
 
     :param args: User given arguments
@@ -435,7 +437,7 @@ def drugZ_analysis(args):
         gene_normZ = calculate_gene_drugz_score(per_gene_score=per_gene_scores, min_observations=1)
 
         log_.debug('Writing output file unpaired results')
-        write_drugZ_output(outfile=args.drugz_output_file, output=gene_normZ)
+        write_drugz_output(outfile=args.drugz_output_file, output=gene_normZ)
 
         log_.debug('Finished the analysis.')
 
@@ -479,16 +481,7 @@ def drugZ_analysis(args):
         gene_normZ = calculate_gene_drugz_score(per_gene_score=per_gene_scores, min_observations=1)
 
         log_.debug('Writing output file paired results')
-        write_drugZ_output(outfile=args.drugz_output_file, output=gene_normZ)
+        write_drugz_output(outfile=args.drugz_output_file, output=gene_normZ)
 
         log_.debug('Finished the analysis.')
         return gene_normZ
-
-# def main():
-#     args = get_args()
-#
-#     drugZ_analysis(args)
-#
-#
-# if __name__ == "__main__":
-#     main()

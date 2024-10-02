@@ -1,7 +1,7 @@
 # Python VERSION = "3.12"
 # ---------------------------------------------------------------------------------------------------
 # Script for the identification of drug-gene interactions in CRISPR screens using DrugZ
-# Last modified 19 November 2023
+# Last modified 02.10.2024
 # Free to modify and redistribute
 # ---------------------------------------------------------------------------------------------------
 # This file provides the full control over the entire analysis. Any inputs that need to be defined are stated here.
@@ -18,7 +18,7 @@
 # unwanted_columns: Columns that should be removed from the input file
 # unwanted_rows: Rows that should be removed from the input file
 # unwanted_row_substrings: Row substrings that should be removed from gRNA names
-# threshold: Minimum number of total reads/guide so that the guide will not be discarded
+# threshold_reads: Minimum number of total reads/guide so that the guide will not be discarded
 # x_axis: Metric that should be taken for the x axis of the distribution plot
 # threshold_fdr: Maximum FDR for a gene to be considered significant
 # top: Maximum number of significant genes that will be displayed
@@ -38,54 +38,106 @@
 #       -> required for creating counts_summary file
 # the input file has annotation columns that are identified by being the only non-numerical columns
 # ---------------------------------------------------------------------------------------------------
+import os
 from pathlib import Path
+import logging as log
 import data_preparation
 import result_analysis
 from analysis_tools import run_script
-import os
-import logging as log
 
-log.basicConfig(level=log.DEBUG)
+log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)
 
 
-def CRISPR_screen_analysis(args):
-    # Set a working directory (the results will be inserted here)
-    working_dir = args.working_dir
-    os.chdir(working_dir)
+class CRISPRScreenAnalysis:
+    def __init__(self, args):
+        """
+        Initialize the CRISPRScreenAnalysis with user-specified arguments.
+        Args:
+            args: Argument object containing various parameters like input file, working directory, etc.
+        """
 
-    # Extract the dataset identifier
-    dataset = os.path.basename(args.input_file).split('_')[0]
-    log_.info(f"Starting analysis for {dataset}\n")
+        self.working_dir = args.working_dir
+        self.input_file = args.input_file
+        self.dataset = os.path.basename(self.input_file).split('_')[0]
+        self.output_file = f"{self.dataset}_data_prep.csv"
+        self.summary_file = f"{self.dataset}_counts_summary.csv"
+        self.normalized_file = f"{self.dataset}_norm.csv"
+        self.target_samples = args.target_samples
+        self.reference_samples = args.reference_samples
+        self.output_folder = Path(self.working_dir) / "results"
+        self.essential_genes = args.essential_genes
+        self.non_essential_genes = args.non_essential_genes
+        self.library_file = args.library_file
+        self.unwanted_columns = args.unwanted_columns
+        self.unwanted_rows = args.unwanted_rows
+        self.unwanted_row_substrings = args.unwanted_row_substrings
+        self.threshold_reads = args.threshold_reads
+        self.x_axis = args.x_axis
+        self.threshold_fdr = args.threshold_fdr
+        self.top = args.top
+        self.distribution_condition1 = args.distribution_condition1
+        self.distribution_condition2 = args.distribution_condition2
+        self.replicate_type = args.replicate_type
 
-    # Define the names of the output files using the dataset identifier
-    args.output_file = f"{dataset}_data_prep.csv"
-    args.summary_file = f"{dataset}_counts_summary.csv"
-    args.normalized_file = f"{dataset}_norm.csv"
-    args.dataset = dataset
+        self.run_analysis()
 
-    # Create the output directory for the results files and plots
-    args.output_folder = rf".\results"
-    if not os.path.exists(args.output_folder):
-        os.makedirs(args.output_folder)
-    os.chdir(args.output_folder)
+    def run_analysis(self):
+        """
+        Executes the complete CRISPR screen analysis.
+        """
 
-    # Prepare the data for DrugZ
-    log_.info(f"Preparing dataset for hit identification\n")
-    data_preparation.data_preparation(args)
+        log_.info(f"Starting analysis for {self.dataset}\n")
 
-    # Perform the drugz analysis (additional optional parameters can be changed in 'run_drugz_try.py' if wanted)
-    log_.info(f"Performing DrugZ analysis")
-    run_script(rf"{Path(__file__).parents[0]}\run_drugz.py",
-               additional_args=[args.target_samples, args.reference_samples])
+        self.setup_output_directory()
+        self.prepare_data()
+        self.perform_drugz_analysis()
+        self.calculate_log2fc()
 
-    # Create drugZ log2 fold changes
-    log_.info(f"Calculating log2 fold-changes between the target and reference sample\n")
-    result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt", target_samples=args.target_samples,
-                                        reference_samples=args.reference_samples,
-                                        essential_genes=args.essential_genes,
-                                        non_essential_genes=args.non_essential_genes, x_axis=args.x_axis,
-                                        threshold_fdr=args.threshold_fdr,
-                                        top=args.top)
+        log_.info(f"Analysis for {self.dataset} complete")
 
-    log_.info(f"Analysis for {dataset} complete\n")
+    def setup_output_directory(self):
+        """
+        Sets up the output directory for storing results.
+        """
+
+        log_.info(f"Setting up the output directory\n")
+
+        os.makedirs(self.output_folder, exist_ok=True)
+        os.chdir(self.output_folder)
+        log_.debug(f"Output directory set to: {self.output_folder}")
+
+    def prepare_data(self):
+        """
+        Prepares data for DrugZ analysis.
+        """
+
+        log_.info(f"Preparing dataset for hit identification")
+
+        data_preparation.data_preparation(self)
+
+    def perform_drugz_analysis(self):
+        """
+        Runs DrugZ analysis using the provided script.
+        """
+
+        log_.info(f"Performing DrugZ analysis")
+
+        run_script(Path(__file__).parent / "run_drugz.py",
+                   additional_args=[self.target_samples, self.reference_samples])
+
+    def calculate_log2fc(self):
+        """
+        Calculates log2 fold-changes between the target and reference samples.
+        """
+
+        log_.info(f"Calculating log2 fold-changes between the target and reference sample")
+        # Call result analysis function here
+        result_analysis.create_drugz_log2fc(drugz_input=f"{self.dataset}_drugz-input.txt",
+                                            target_samples=self.target_samples,
+                                            reference_samples=self.reference_samples,
+                                            essential_genes=self.essential_genes,
+                                            non_essential_genes=self.non_essential_genes,
+                                            x_axis=self.x_axis,
+                                            threshold_fdr=self.threshold_fdr,
+                                            top=self.top)

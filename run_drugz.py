@@ -1,7 +1,7 @@
 # run_drugz: This script is used to execute DrugZ and allows the
 # modification of additional parameters for running DrugZ if wanted
 # by the user.
-# Last modified 19.11.2023
+# Last modified 02.10.2024
 # ------------------------------------
 import drugZ
 import os
@@ -26,8 +26,7 @@ target_samples_list = Args.target_samples.split(',')
 reference_samples_list = Args.reference_samples.split(',')
 
 # Create a DrugZ output folder (if it does not exist yet)
-if not os.path.exists("./drugz"):
-    os.makedirs("./drugz")
+os.makedirs("./drugz", exist_ok=True)
 
 # Call the drugZ_analysis function for each pair of target_sample and reference_sample
 for target_sample, reference_sample in zip(target_samples_list, reference_samples_list):
@@ -36,4 +35,4 @@ for target_sample, reference_sample in zip(target_samples_list, reference_sample
     args.reference_sample = reference_sample
     args.drugz_output_file = args.drugz_output_file + target_sample + "-" + reference_sample + ".txt"
     args.gRNA_outfile = args.gRNA_outfile + target_sample + "-" + reference_sample + ".txt"
-    DrugZ.drugZ_analysis(args)
+    drugZ.drugz_analysis(args)

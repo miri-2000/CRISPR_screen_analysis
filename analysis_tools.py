@@ -12,7 +12,7 @@ exe_files = {}
 
 def assign_type(genes, essential_list, non_essential_list):
     """
-    This function assigns the type (target, essential, non-essential, non-targeting) of
+    Assign the type (target, essential, non-essential, non-targeting) of
     the targeted genes to each guide using the given lists of essential and non-essential genes.
 
     :param genes: Pandas dataframe column with the gene names
@@ -20,6 +20,7 @@ def assign_type(genes, essential_list, non_essential_list):
     :param non_essential_list: Pandas dataframe column with non-essential genes
     :return: types: The types of each gene in the genes variable
     """
+
     # Specify how non-targeting control rows look like
     pattern = re.compile(r"Non-Targeting(_| )Control")
 
@@ -52,6 +53,7 @@ def run_script(script_file, additional_args=None):
 
     :return: Error messages, if the script returns a non-zero exit code
     """
+
     # Identify where the Rscript.exe file is located on the pc
     exe_file = get_exe(script_file)
     command = [exe_file, script_file]
@@ -81,7 +83,7 @@ def get_exe(script_file):
 
     global exe_files
 
-    if script_file.endswith("R"):
+    if script_file.suffix == ".R":
         program = "R"
         exe_name = "Rscript.exe"
         # Specify the path that should contain the R exe file

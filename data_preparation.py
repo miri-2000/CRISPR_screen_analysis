@@ -1,5 +1,5 @@
-# Data_preparation: Script for preparing the given dataset for the hit identification
-# Last modified 19.11.2023
+# data_preparation: Script for preparing the given dataset for the hit identification
+# Last modified 02.10.2024
 # ------------------------------------
 # Purpose of the program
 # 1) remove unwanted rows (here, rows with 'multi:mismatch1'; cannot be mapped to specific Gene)
@@ -10,7 +10,6 @@
 # 7) Call the R script "R_analysis_1" to normalize the read counts and create raw and normalized plots
 # ------------------------------------
 from pathlib import Path
-
 import pandas as pd
 import re
 from analysis_tools import assign_type, run_script
@@ -20,110 +19,245 @@ log.basicConfig(level=log.DEBUG)
 log_ = log.getLogger(__name__)
 
 
-def check_input(data):
+def data_preparation(args):
     """
-    Checks the input data file for errors that prevent the data preparation from working.
+    Perform pre-processing to establish whether the quality of the screen output is
+    good enough to continue with the hit identification.
 
-    :param data: input data file
-    :return: Error message in case the input is not correct.
+    :param args: Input parameters stated in the start_program.py file
+
+    :return:
     """
 
-    # Check if either of the first two columns contain only strings and do not have empty rows (except for the nohit-row)
+    log_.debug("Initiating data preparation")
+
+    # Read the provided input files
+    reads, essential_genes, non_essential_genes, library = read_files(args.input_file, args.essential_genes,
+                                                                      args.non_essential_genes, args.library_file)
+
+    # Check the input file for its correctness
+    check_input(reads)
+
+    # Clean up the input file, so it only contains required columns and rows
+    reads = clean_up(reads, essential_genes, non_essential_genes, args.unwanted_columns, args.unwanted_rows,
+                     args.unwanted_row_substrings)
+
+    # Store all column names representing the conditions and all columns that have "guide_mm1" in their name
+    conditions, data_columns = get_conditions(reads)
+
+    # Remove the nohit row
+    reads, nohit_guide = remove_nohit(reads, conditions)
+
+    # Create a summary file
+    create_summary(reads, conditions, nohit_guide, args.summary_file)
+
+    # Remove columns containing "guide_mm1"
+    reads = remove_guide_mm1_columns(reads)
+
+    # Remove the rows that have a total sum of counts below a certain threshold
+    reads = remove_invalid_guides(reads, args.threshold_reads)
+
+    # Compare the cleaned data file with the given library file
+    compare_with_library(reads, library, essential_genes, non_essential_genes)
+
+    # Store the cleaned data in a csv file
+    log_.debug(f"\nStoring the resulting dataframe in {args.output_file}")
+    reads.to_csv(args.output_file, sep=';', index=False)
+
+    # Remove the replicate notation ("_r1") from the condition names
+    conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
+
+    log_.debug("Normalizing data and creating quality control plots\n")
+    run_script(Path(__file__).parent / "R_analysis_1.R",
+               additional_args=[args.output_file, args.dataset, ",".join(conditions_new), args.replicate_type,
+                                args.target_samples, args.reference_samples, args.distribution_condition1,
+                                args.distribution_condition2])
+
+    log_.debug("Finished Data preparation")
+
+
+def read_files(data_file, essential_genes_file, non_essential_genes_file, library_file):
+    """
+    Read the input files
+
+    :param data_file: File with the read counts for each gRNA
+    :param essential_genes_file: File with the essential genes data
+    :param non_essential_genes_file: File with the non-essential genes data
+    :param library_file: File with the library data
+    :return: Tuple with the input files stored as dataframes
+    """
+
+    read_data = pd.read_csv(data_file, sep="\t", header=0)
+    essential_genes = pd.read_csv(essential_genes_file)
+    non_essential_genes = pd.read_csv(non_essential_genes_file)
+    library = pd.read_csv(library_file, sep="\t")
+
+    return read_data, essential_genes, non_essential_genes, library
+
+
+def check_input(read_data):
+    """
+    Check the input data for errors that prevent the data preparation from working.
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :return: Error message in case the input is not correct
+    """
+
+    # Check if either of the first two columns contain only strings and do not have empty rows (except for the
+    # nohit-row)
     for col in range(2):
-        nan_count = data.iloc[:, col].isna().sum()
+        nan_count = read_data.iloc[:, col].isna().sum()
         if nan_count > 1:
             raise ValueError(f"Column {col + 1} has multiple empty rows. Please make sure that every row has a value.")
 
-        is_all_strings = data.iloc[:, col].apply(lambda x: isinstance(x, str) or pd.isna(x)).all()
+        is_all_strings = read_data.iloc[:, col].apply(lambda x: isinstance(x, str) or pd.isna(x)).all()
 
         if not is_all_strings:
             raise ValueError(f"Column {col + 1} should contain only strings")
 
     # Control if the columns with the sgRNA names and sequences from the table are both unique
     log_.debug("Checking the uniqueness of the sgRNA names and sequences")
-    if len(data) != len(set(data.iloc[:, 0])) or len(data) != len(set(data.iloc[:, 1])):
+    if len(read_data) != len(set(read_data.iloc[:, 0])) or len(read_data) != len(set(read_data.iloc[:, 1])):
         raise ValueError(
             "Both columns with sgRNA names and sequences need to be unique. If this is true, please check whether "
             "these two columns are the first two columns of the input data file (as expected).")
 
     # Check if there is a nohit_row
     log_.debug("Identifying the nohit_row")
-    nohit_row = data[data.iloc[:, 0] == 'nohit_row']
+    nohit_row = read_data[read_data.iloc[:, 0] == 'nohit_row']
     if len(nohit_row) == 0:
         raise ValueError("There is no nohit_row. Please check your dataset for a row that is called 'nohit_row'.")
 
 
-def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, unwanted_rows=None,
+def clean_up(read_data, essential_genes, non_essential_genes, unwanted_columns=None, unwanted_rows=None,
              unwanted_row_substrings=None):
     """
-    This function removes unwanted rows and columns and makes the dataset ready for
-    sequential processing.
+    Remove unwanted rows and columns and prepare the dataset for
+    sequential processing
 
-    :param data: Dataset containing read counts for each gRNA.
+    :param read_data: Dataset containing read counts for each gRNA
     :param essential_genes: list of genes that are considered essential
     :param non_essential_genes: list of genes that are considered non-essential
-    :param unwanted_columns: List of substrings used to match and delete columns. (Optional)
-    :param unwanted_rows: List of substrings used to match and delete rows. (Optional)
-    :param unwanted_row_substrings: List of substrings used to match and remove from sgRNA name. (Optional)
+    :param unwanted_columns: List of substrings used to match and delete columns (Optional)
+    :param unwanted_rows: List of substrings used to match and delete rows (Optional)
+    :param unwanted_row_substrings: List of substrings used to match and remove from sgRNA name (Optional)
 
-    :return: cleaned_data: Dataset with the created changes
+    :return: read_data: Dataset with the created changes
     """
-
-    # Create a copy of the current dataframe
-    cleaned_data = data
 
     # Rename the first column to "sgRNA" to avoid inconsistent column names
     log_.debug("Renaming first column to 'sgRNA'")
-    print(cleaned_data.columns)
-    cleaned_data.rename(columns={cleaned_data.columns[0]: "sgRNA"}, inplace=True)
+    read_data.rename(columns={read_data.columns[0]: "sgRNA"}, inplace=True)
 
     if unwanted_columns:
         # Remove unwanted columns
-        log_.debug("Removing unwanted columns")
-        log_.debug(f"Columns to be removed: {unwanted_columns}")
-        # For this dataset: Remaining columns either contain the information for each condition or belong to "guide_mm1"
-        length_before = len(cleaned_data.columns)
-        cleaned_data = cleaned_data.drop(
-            columns=cleaned_data.filter(regex=unwanted_columns.replace(",", "|")))
-        if length_before != len(cleaned_data.columns):
-            log_.debug(
-                f"Number of columns before: {length_before}, after: {len(cleaned_data.columns)}, diff: {length_before - len(cleaned_data.columns)}")
-        else:
-            log_.debug("No unwanted columns identified")
+        read_data = remove_unwanted_columns(read_data, unwanted_columns)
 
     if unwanted_rows:
         # Remove rows with multi-matches (contain "multi:mismatch1" in column "name")
-        log_.debug("Removing unwanted rows")
-        log_.debug(
-            f"Rows containing (one of) the following in the sgRNA name will be removed: {unwanted_rows}")
-        rows_to_be_removed = cleaned_data["sgRNA"].str.contains(unwanted_rows.replace(",", "|"))
-        if any(rows_to_be_removed):
-            log_.debug(
-                f"Number of rows before: {len(cleaned_data)}, after: {len(cleaned_data[~rows_to_be_removed])}, diff: {len(cleaned_data[rows_to_be_removed])}")
-            cleaned_data = cleaned_data[~rows_to_be_removed]
-        else:
-            log_.debug("No unwanted rows identified")
+        read_data = remove_unwanted_rows(read_data, unwanted_rows)
 
     if unwanted_row_substrings:
         # Remove unwanted substrings from the gRNA column
-        log_.debug("Removing unwanted substrings from rows of column sgRNA")
-        log_.debug(
-            f"The following substrings will be removed from the sgRNA name: {unwanted_row_substrings}")
-        rows_to_be_edited = cleaned_data[cleaned_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",", "|"))]
-        if len(rows_to_be_edited) > 0:
-            for substring in unwanted_row_substrings.split(','):
-                cleaned_data['sgRNA'] = cleaned_data['sgRNA'].str.replace(substring + '.*', '', regex=True)
-            log_.debug(f"Number of edited rows: {len(rows_to_be_edited)}")
-        else:
-            log_.debug("No unwanted row substrings identified")
+        read_data = remove_unwanted_row_substrings(read_data, unwanted_row_substrings)
 
     # The column names are converted to a common naming convention (stated in the documentation)
     # to avoid inconsistency in the output files between different screens.
     # e.g. T1_3D_to_2D_Rep3:TGGTCA is changed to t1_3d2d_r3
+    read_data = normalize_column_names(read_data)
+
+    # Create a new column called 'Gene' that contains the names of the genes
+    # this is done by removing the extensions from the sgRNA names
+    read_data = create_gene_column(read_data)
+
+    # Assign a type to each gRNA
+    read_data = assign_gene_type(read_data, essential_genes, non_essential_genes)
+
+    # Return the cleaned dataframe
+    return read_data
+
+
+def remove_unwanted_columns(read_data, unwanted_columns):
+    """
+    Remove unwanted columns from the input dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param unwanted_columns: List of substrings used to match and delete columns (Optional)
+    :return: Cleaned dataset without unwanted columns
+    """
+
+    log_.debug("Removing unwanted columns")
+    log_.debug(f"Columns to be removed: {unwanted_columns}")
+    # For this dataset: Remaining columns either contain the information for each condition or belong to "guide_mm1"
+    length_before = len(read_data.columns)
+    read_data = read_data.drop(
+        columns=read_data.filter(regex=unwanted_columns.replace(",", "|")))
+    if length_before != len(read_data.columns):
+        log_.debug(
+            f"Number of columns before: {length_before}, after: {len(read_data.columns)}, diff: {length_before - len(read_data.columns)}")
+    else:
+        log_.debug("No unwanted columns identified")
+
+    return read_data
+
+
+def remove_unwanted_rows(read_data, unwanted_rows):
+    """
+    Remove unwanted rows from the input dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param unwanted_rows: List of substrings used to match and delete rows (Optional)
+    :return: Cleaned dataset without unwanted rows
+    """
+
+    log_.debug("Removing unwanted rows")
+    log_.debug(
+        f"Rows containing (one of) the following in the sgRNA name will be removed: {unwanted_rows}")
+    rows_to_be_removed = read_data["sgRNA"].str.contains(unwanted_rows.replace(",", "|"))
+    if any(rows_to_be_removed):
+        log_.debug(
+            f"Number of rows before: {len(read_data)}, after: {len(read_data[~rows_to_be_removed])}, diff: {len(read_data[rows_to_be_removed])}")
+        read_data = read_data[~rows_to_be_removed]
+    else:
+        log_.debug("No unwanted rows identified")
+
+    return read_data
+
+
+def remove_unwanted_row_substrings(read_data, unwanted_row_substrings):
+    """
+    Remove unwanted row substrings from the input dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param unwanted_row_substrings: List of substrings used to match and remove from sgRNA name (Optional)
+    :return: Cleaned dataset without unwanted row substrings
+    """
+
+    log_.debug("Removing unwanted substrings from rows of column sgRNA")
+    log_.debug(
+        f"The following substrings will be removed from the sgRNA name: {unwanted_row_substrings}")
+    rows_to_be_edited = read_data[read_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",", "|"))]
+    if len(rows_to_be_edited) > 0:
+        for substring in unwanted_row_substrings.split(','):
+            read_data['sgRNA'] = read_data['sgRNA'].str.replace(substring + '.*', '', regex=True)
+        log_.debug(f"Number of edited rows: {len(rows_to_be_edited)}")
+    else:
+        log_.debug("No unwanted row substrings identified")
+
+    return read_data
+
+
+def normalize_column_names(read_data):
+    """
+    Convert column names to a common naming convention
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :return: Cleaned dataset with normalized column names
+    """
     log_.debug("Modifying column names")
     log_.debug("Changing names like 'T1_3D_to_2D_Rep3:TGGTCA' to 't1_3d2d_r3'")
-    data_columns = cleaned_data.select_dtypes(include='number')
-    annotations = cleaned_data.select_dtypes(exclude='number')
+    data_columns = read_data.select_dtypes(include='number')
+    annotations = read_data.select_dtypes(exclude='number')
     data_columns.columns = (data_columns.columns.str.replace(':.*', '', regex=True)
                             .str.lower()
                             .str.replace("untreated", "ut")
@@ -141,39 +275,133 @@ def clean_up(data, essential_genes, non_essential_genes, unwanted_columns=None, 
         else:
             new_columns += [column]
     data_columns.columns = new_columns
-    cleaned_data = pd.concat([annotations, data_columns], axis=1)
+    read_data = pd.concat([annotations, data_columns], axis=1)
 
-    # Create a new column called 'Gene' that contains the names of the genes
-    # this is done by removing the extensions from the sgRNA names
+    return read_data
+
+
+def create_gene_column(read_data):
+    """
+    Create a gene column from read_data
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :return: Dataset with an added gene column
+    """
+
     log_.debug("Creating a column for the gene names")
     pattern = r"-[0-9]*$"
-    cleaned_data.insert(1, "Gene", [re.sub(pattern, "", gene) for gene in cleaned_data["sgRNA"]])
+    read_data.insert(1, "Gene", [re.sub(pattern, "", gene) for gene in read_data["sgRNA"]])
 
-    # Assign a type to each gRNA
+    return read_data
+
+
+def assign_gene_type(read_data, essential_genes, non_essential_genes):
+    """
+    Create a column with the assigned data type for each gene
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param essential_genes: list of genes that are considered essential
+    :param non_essential_genes: list of genes that are considered non-essential
+
+    :return: Dataset with an added column for the gene type
+    """
+
     log_.debug("Creating a column with the assigned data type for each gene")
 
-    cleaned_data.insert(2, "type", assign_type(cleaned_data['Gene'], essential_genes, non_essential_genes))
+    read_data.insert(2, "type", assign_type(read_data['Gene'], essential_genes, non_essential_genes))
 
     log_.debug(
-        f"Dataset composition:\nNumber of essential genes (p) = {len(set(cleaned_data['Gene'][cleaned_data['type'] == 'p']))}, "
-        f"Number of sgRNAs = {len(cleaned_data['Gene'][cleaned_data['type'] == 'p'])}\n"
-        f"Number of non-essential genes (n) = {len(set(cleaned_data['Gene'][cleaned_data['type'] == 'n']))}, "
-        f"Number of sgRNAs = {len(cleaned_data['Gene'][cleaned_data['type'] == 'n'])}\n"
-        f"Number of non-targeting controls (o) = {len(cleaned_data['Gene'][cleaned_data['type'] == 'o'])}\n"
-        f"Number of undefined genes (x) = {len(set(cleaned_data['Gene'][cleaned_data['type'] == 'x']))}, "
-        f"Number of sgRNAs = {len(cleaned_data['Gene'][cleaned_data['type'] == 'x'])}\n")
+        f"\nDataset composition:\nNumber of essential genes (p) = {len(set(read_data['Gene'][read_data['type'] == 'p']))}, "
+        f"Number of sgRNAs = {len(read_data['Gene'][read_data['type'] == 'p'])}\n"
+        f"Number of non-essential genes (n) = {len(set(read_data['Gene'][read_data['type'] == 'n']))}, "
+        f"Number of sgRNAs = {len(read_data['Gene'][read_data['type'] == 'n'])}\n"
+        f"Number of non-targeting controls (o) = {len(read_data['Gene'][read_data['type'] == 'o'])}\n"
+        f"Number of undefined genes (x) = {len(set(read_data['Gene'][read_data['type'] == 'x']))}, "
+        f"Number of sgRNAs = {len(read_data['Gene'][read_data['type'] == 'x'])}\n")
 
-    # Return the cleaned dataframe
-    return cleaned_data
+    return read_data
 
 
-def create_summary(data, conditions, nohit_guide, summary_file):
+def get_conditions(read_data):
+    """
+    Select columns that are used for creating the counts_summary file
+    :param read_data: Dataset containing read counts for each gRNA
+
+    :return: Tuple with the selected conditions and the data columns
+    """
+
+    log_.debug("Selecting columns that are used for creating the counts_summary file")
+    data_columns = read_data.select_dtypes(include='number').columns
+    guide_mm1 = []
+    conditions = [col for col in data_columns if not re.search("guide_mm1", col) or guide_mm1.append(col)]
+
+    return conditions, data_columns
+
+
+def remove_nohit(read_data, conditions):
+    """
+    Remove the nohit row from the dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param conditions: Selected conditions
+    :return: Tuple containing dataset without nohit row and the nohit row
+    """
+
+    log_.debug("Selecting the nohit row and removing it from the table")
+    nohit_guide = read_data[read_data.iloc[:, 0] == 'nohit_row'][conditions]
+    read_data = read_data.drop(nohit_guide.index)
+
+    return read_data, nohit_guide
+
+
+def remove_guide_mm1_columns(read_data):
+    """
+    Remove the guide_mm1 columns from the dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :return: Dataset with guide_mm1 columns removed
+    """
+    log_.debug(f"Removing guide_mm1 columns")
+    read_data = read_data.drop(columns=read_data.filter(regex="guide_mm1"))
+
+    return read_data
+
+
+def remove_invalid_guides(read_data, threshold_reads):
+    """
+    Remove invalid guides from the dataset
+
+    :param read_data: Dataset containing read counts for each gRNA
+    :param threshold_reads: Minimum number of total reads/guide so that the guide will not be discarded
+
+    :return: Dataset with invalid guides removed
+    """
+
+    if threshold_reads == 0:
+        log_.debug(f"Removing sgRNAs with a sum over all columns of {threshold_reads}")
+    else:
+        log_.debug(f"Removing sgRNAs with a sum over all columns below {threshold_reads}")
+    # Calculate row sums for the data columns
+    row_sums = read_data.sum(numeric_only=True, axis=1)
+    # Check if the sum of the total and filtered rows are the same
+    if len(read_data) != len(read_data[row_sums > threshold_reads]):
+        log_.debug(
+            f"Number of rows before filtering: {len(read_data)}, after filtering: {len(read_data[row_sums > threshold_reads])},"
+            f" difference: {len(read_data[row_sums <= threshold_reads])}")
+        read_data = read_data[row_sums > threshold_reads]
+    else:
+        log_.debug(f"No sgRNAs count sums below {threshold_reads} identified")
+
+    return read_data
+
+
+def create_summary(read_data, conditions, nohit_guide, summary_file):
     """
     This function creates a summary file that show the sums of reads per condition.
     The program makes three different classes (condition, condition with 1 mismatch and
     no match to any condition) and calculates the sum of reads for each of these classes per condition.
 
-    :param data: Cleaned data file with read counts per condition
+    :param read_data: Cleaned data file with read counts per condition
     :param conditions: A list of all conditions from the screen
     :param nohit_guide: The row with the reads per condition that could not be mapped to any guide (nohit_row)
     :param summary_file: Name of the output file
@@ -184,7 +412,7 @@ def create_summary(data, conditions, nohit_guide, summary_file):
 
     # Calculate the sum for all columns
     log_.debug("Calculating sum of each column")
-    data_sum = data.sum(numeric_only=True, axis=0)
+    data_sum = read_data.sum(numeric_only=True, axis=0)
 
     # Store the sum values of the condition columns
     sum_conditions = pd.DataFrame(data_sum.loc[data_sum.index.isin(conditions)])
@@ -237,83 +465,11 @@ def compare_with_library(data, library, essential_genes, non_essential_genes):
 
     # Calculate the ratio of the number of all sgRNAs contained in the read counts file compared to the number of
     # sgRNAs in the library for each type
+    log_.debug("\nLibray composition")
     for gene_type in ["p", "n", "o", "x"]:
         if len(lib_copy[lib_copy['type'] == gene_type]) != 0:
             ratio = round(100 * len(data[data['type'] == gene_type]) / len(lib_copy[lib_copy['type'] == gene_type]), 1)
         else:
             ratio = "-Inf"
-        log_.info(
-            f"Number of type {gene_type} sgRNAs in library: {len(lib_copy[lib_copy['type'] == gene_type])}, in dataset: {len(data[data['type'] == gene_type])}, in percentage: {ratio} %")
-
-
-def data_preparation(args):
-    """
-    Perform pre-processing to establish whether the quality of the screen output is
-    good enough to continue with the hit identification.
-
-    :param args: All input parameters stated in the start_program.py file
-
-    :return:
-    """
-    log_.debug("Initiating data preparation")
-
-    # Read the provided input files
-    reads = pd.read_csv(args.input_file, sep="\t", header=0)
-    essential_genes = pd.read_csv(args.essential_genes)
-    non_essential_genes = pd.read_csv(args.non_essential_genes)
-    library = pd.read_csv(args.library_file, sep="\t")
-
-    # Check the input file for its correctness
-    check_input(reads)
-
-    # Clean up the input file, so it only contains required columns and rows
-    reads = clean_up(reads, essential_genes, non_essential_genes, args.unwanted_columns, args.unwanted_rows,
-                     args.unwanted_row_substrings)
-
-    # Store all column names representing the conditions and all columns that have "guide_mm1" in their name
-    log_.debug("Selecting columns that are used for creating the counts_summary file")
-    data_columns = reads.select_dtypes(include='number').columns
-    guide_mm1 = []
-    conditions = [col for col in data_columns if not re.search("guide_mm1", col) or guide_mm1.append(col)]
-
-    # Create a summary file if wanted by the user
-    log_.debug("Selecting the nohit_row and removing it from the table")
-    nohit_guide = reads[reads.iloc[:, 0] == 'nohit_row'][conditions]
-    reads = reads.drop(nohit_guide.index)
-    create_summary(data=reads, conditions=conditions, nohit_guide=nohit_guide, summary_file=args.summary_file)
-
-    # Remove columns containing "guide_mm1"
-    log_.debug(f"Removing guide_mm1 columns")
-    reads = reads.drop(columns=reads.filter(regex="guide_mm1"))
-
-    # Remove the rows that have a total sum of counts below a certain threshold
-    if args.threshold_reads == 0:
-        log_.debug(f"Removing sgRNAs with a sum over all columns of {args.threshold_reads}")
-    else:
-        log_.debug(f"Removing sgRNAs with a sum over all columns below {args.threshold_reads}")
-    # Calculate row sums for the data columns
-    row_sums = reads.sum(numeric_only=True, axis=1)
-    # Check if the sum of the total and filtered rows are the same
-    if len(reads) != len(reads[row_sums > args.threshold_reads]):
         log_.debug(
-            f"Number of rows before filtering: {len(reads)}, after filtering: {len(reads[row_sums > args.threshold_reads])}, "
-            f"difference: {len(reads[row_sums <= args.threshold_reads])}")
-        reads = reads[row_sums > args.threshold_reads]
-    else:
-        log_.debug(f"No sgRNAs count sums below {args.threshold_reads} identified")
-
-    # Compare the cleaned data file with the given library file
-    compare_with_library(reads, library, essential_genes, non_essential_genes)
-
-    # Store the cleaned data in a csv file
-    log_.debug(f"Storing the resulting dataframe in {args.output_file}")
-    reads.to_csv(args.output_file, sep=';', index=False)
-
-    log_.info("Normalizing data and creating quality control plots\n")
-    # Remove the replicate notation ("_r1") from the condition names
-    conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
-    run_script(rf"{Path(__file__).parents[0]}\R_analysis_1.R",
-               additional_args=[args.output_file, args.dataset, ",".join(conditions_new), args.replicate_type,
-                                args.target_samples, args.reference_samples, args.distribution_condition1,
-                                args.distribution_condition2])
-    log_.debug("Finished Data preparation")
+            f"Number of type {gene_type} sgRNAs in library: {len(lib_copy[lib_copy['type'] == gene_type])}, in dataset: {len(data[data['type'] == gene_type])}, in percentage: {ratio} %")

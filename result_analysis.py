@@ -1,10 +1,9 @@
-# Result_analysis: Script that creates the log2 fold changes between target_samples and reference_samples and
+# result_analysis: Script that creates the log2 fold changes between target_samples and reference_samples and
 # facilitates the creation of gene- and guide-level significance plots
-# Last modified 19.11.2023
+# Last modified 02.10.2024
 # ------------------------------------
 import logging as log
 from pathlib import Path
-
 import pandas as pd
 import numpy as np
 from analysis_tools import run_script, assign_type
@@ -16,7 +15,7 @@ log_ = log.getLogger(__name__)
 def create_drugz_log2fc(drugz_input, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
                         threshold_fdr, top):
     """
-    This function calculates the drugz log2 fold-changes between the target samples and reference samples
+    Calculate the drugz log2 fold-changes between the target samples and reference samples
 
     :param drugz_input: Input file used for running the DrugZ analysis
     :param target_samples: Names of target samples
@@ -33,27 +32,17 @@ def create_drugz_log2fc(drugz_input, target_samples, reference_samples, essentia
     log_.debug("Computing log2 fold changes from drugz results")
 
     # Read the provided input files
-    data = pd.read_csv(drugz_input, sep="\t")
+    drugz_input = pd.read_csv(drugz_input, sep="\t")
     essential_genes = pd.read_csv(essential_genes)
     non_essential_genes = pd.read_csv(non_essential_genes)
     target_samples = target_samples.split(',')
     reference_samples = reference_samples.split(',')
 
     # Select the time points (conditions without the replicate number, e.g. t1_2d,...)
-    timepoints = list(data.select_dtypes(include='number').columns.str.rsplit("_", n=1).str[0].unique())
-    geometric_means = {}
-    for tp in timepoints:
+    timepoints = list(drugz_input.select_dtypes(include='number').columns.str.rsplit("_", n=1).str[0].unique())
 
-        # Select all columns that belong to this time point
-        tp_columns = [column for column in data.columns if tp == column.rsplit('_', 1)[0]]
-        subset = data[tp_columns]
-
-        # Calculate the geometric means
-        log_values = np.log(subset.values)
-        geometric_mean = np.exp(np.mean(log_values, axis=1))
-        geometric_means[tp] = geometric_mean
-
-    geometric_means = pd.DataFrame(geometric_means, index=data["sgRNA"])
+    # Calculate the geometric means
+    geometric_means = calculate_geometric_means(drugz_input, timepoints)
 
     log2df_all = None
     # Loop over all elements in target_samples
@@ -65,29 +54,32 @@ def create_drugz_log2fc(drugz_input, target_samples, reference_samples, essentia
         comparison = f"{target_sample}-{reference_sample}"
         input_file_format = fr"drugz_{comparison}.txt"
 
+        # Read the DrugZ output file
         input_file = pd.read_csv(fr".\drugz\{input_file_format}", sep="\t")
+
         # Rename the first column to ensure consistent naming
         input_file.rename(columns={input_file.columns[0]: "Gene"}, inplace=True)
 
         # Calculate the log2 fold-change between the current target and reference sample
-        log2fc = np.log2(geometric_means[target_sample] / geometric_means[reference_sample])
-        log2fc.reset_index(drop=True, inplace=True)
-        log2df = pd.DataFrame({"Gene": data["Gene"], "l2fc": round(log2fc, 3)})  # change to Gene
+        log2df = calculate_log2_foldchange(drugz_input, geometric_means, target_sample, reference_sample)
 
         # Place all log2 fold-changes per sgRNA in one row, separated by '|'
-        log2_per_gRNA = log2df.groupby("Gene")["l2fc"].apply(lambda x: "|".join(map(str, x)))
-        # Take the mean of the log2 fold-changes for all replicates per gene
-        log2_per_gene = log2df.groupby("Gene")["l2fc"].mean().round(3).reset_index()
-        log2_per_gene.columns = ["Gene", "Gene.log2fc"]
+        log2_per_gRNA = get_log2_per_gRNA(log2df)
 
+        # Take the mean of the log2 fold-changes for all replicates per gene
+        log2_per_gene = get_log2_per_gene(log2df)
+
+        # Merge the dataset with the log2 fold-changes per gRNA & gene
         log2df = pd.merge(input_file, log2_per_gRNA, on="Gene")
         log2df = pd.merge(log2df, log2_per_gene, on="Gene")
 
         # Add a column with the type of each gene to the dataframe
         log2df.insert(1, "type", assign_type(log2df["Gene"], essential_genes, non_essential_genes))
+
+        # Sort the dataset by "rank_supp"
         log2df = log2df.sort_values(by="rank_supp")
 
-        # Add the corresponding filename to the individual data columns
+        # Add the corresponding filename to the individual read_data columns
         new_column_names = [f"{comparison}.{col}" for col in log2df.columns[2:]]
 
         # Update the column names in the DataFrame
@@ -104,7 +96,77 @@ def create_drugz_log2fc(drugz_input, target_samples, reference_samples, essentia
     # Start the execution of R_analysis_2
     log_.info("Creating significance plots\n")
     log2fc_all = r".\drugz_log2fcs_all.csv"
-    run_script(rf"{Path(__file__).parents[0]}\R_analysis_2.R",
+    run_script(Path(__file__).parents[0] / "R_analysis_2.R",
                additional_args=[log2fc_all, ",".join(target_samples), ",".join(reference_samples), x_axis,
                                 str(threshold_fdr),
                                 str(top)])
+
+
+def calculate_geometric_means(read_data, timepoints):
+    """
+    Calculate the geometric mean for each timepoint
+
+    :param read_data: Cleaned data file with read counts per condition
+    :param timepoints: List of timepoints
+    :return: Geometric mean for each timepoint
+    """
+
+    geometric_means = {}
+    for tp in timepoints:
+        # Select all columns that belong to this time point
+        tp_columns = [column for column in read_data.columns if tp == column.rsplit('_', 1)[0]]
+        subset = read_data[tp_columns]
+
+        # Calculate the geometric means
+        log_values = np.log(subset.values)
+        geometric_mean = np.exp(np.mean(log_values, axis=1))
+        geometric_means[tp] = geometric_mean
+
+    geometric_means = pd.DataFrame(geometric_means, index=read_data["sgRNA"])
+
+    return geometric_means
+
+
+def calculate_log2_foldchange(read_data, geometric_means, target_sample, reference_sample):
+    """
+    Calculate the log2 fold change for the given target and reference sample
+
+    :param read_data: Cleaned data file with read counts per condition
+    :param geometric_means: Geometric means for each timepoint
+    :param target_sample: Names of target sample
+    :param reference_sample: Names of reference/control sample
+    :return: Log2 fold change for the given target and reference sample
+    """
+
+    log2fc = np.log2(geometric_means[target_sample] / geometric_means[reference_sample])
+    log2fc.reset_index(drop=True, inplace=True)
+    log2df = pd.DataFrame({"Gene": read_data["Gene"], "l2fc": round(log2fc, 3)})
+
+    return log2df
+
+
+def get_log2_per_gRNA(log2df):
+    """
+    Calculate the log2 fold change per gRNA
+
+    :param log2df: Log2 fold change
+    :return: Log2 fold change per gRNA
+    """
+
+    log2_per_gRNA = log2df.groupby("Gene")["l2fc"].apply(lambda x: "|".join(map(str, x)))
+
+    return log2_per_gRNA
+
+
+def get_log2_per_gene(log2df):
+    """
+    Calculate the log2 fold change per gene
+
+    :param log2df: Log2 fold change
+    :return: Log2 fold change per gene
+    """
+
+    log2_per_gene = log2df.groupby("Gene")["l2fc"].mean().round(3).reset_index()
+    log2_per_gene.columns = ["Gene", "Gene.log2fc"]
+
+    return log2_per_gene
