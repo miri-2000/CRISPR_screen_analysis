@@ -10,9 +10,10 @@
 3. Open the Anaconda prompt, change into the CRISPR_screen_analysis folder location and paste the following
 
    ```cmd
-   conda env create -f environment.yml
-   conda activate crispr_env
-   python launch_app.py
+    con -f environment.yml
+    conda activate crispr_env
+    Rscript install_r_packages.R
+    python launch_app.py
    ```
    You should now see a window that allows you to type in the CRISPR screen parameters
 
