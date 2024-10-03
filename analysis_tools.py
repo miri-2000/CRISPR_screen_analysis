@@ -62,7 +62,6 @@ def run_script(script_file, additional_args=None):
         command = [sys.executable, script_file]
     if additional_args is not None:
         command += additional_args
-    print(command)
 
     # Set up a try-except statement to condcatch occurring errors while executing the R file
     try:

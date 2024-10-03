@@ -1,7 +1,7 @@
 # DRUGZ (modified version): Script for the identification of drug-gene interactions in
 # paired sample genomic perturbation screens
 # original version: https://github.com/hart-lab/drugz
-# Last modified 19.11.2023
+# Last modified 03.10.2024
 # ------------------------------------
 import sys
 import numpy as np
@@ -201,7 +201,7 @@ def empirical_bayes(fold_change, half_window_size, no_of_guides, fc_replicate_id
 
     # Calculate the standard deviation of fold-change based on a 2 * define window size range
     std_dev = fold_change.iloc[0: half_window_size * 2][fc_replicate_id].std()
-    fold_change[empirical_bayes_id][0: half_window_size] = std_dev
+    fold_change.iloc[0: half_window_size, fold_change.columns.get_loc(empirical_bayes_id)] = std_dev
 
     # Iterate in a range(half_window_size, n-half_window_size, 25) where n is the number of guides
     for i in range(half_window_size, no_of_guides - half_window_size + 25, 25):
@@ -210,16 +210,16 @@ def empirical_bayes(fold_change, half_window_size, no_of_guides, fc_replicate_id
 
         # If the current variation is greater than the one for previous bin then set variation equal to this
         if std_dev >= fold_change[empirical_bayes_id].iloc[i - 1]:
-            fold_change[empirical_bayes_id][i:i + 25] = std_dev  # set new std in whole step size (25)
+            fold_change.iloc[i:i + 25, fold_change.columns.get_loc(empirical_bayes_id)] = std_dev
         # Otherwise, set it equal to the variation of the previous bin
         # This allows variation estimate for each bin to only increase or stay the same as the previous
         else:
-            fold_change[empirical_bayes_id][i:i + 25] = fold_change.iloc[i - 1][empirical_bayes_id]
+            fold_change.iloc[i:i + 25, fold_change.columns.get_loc(empirical_bayes_id)] = fold_change.iloc[i - 1][empirical_bayes_id]
 
     # Get the variation estimate for the final bin and set the remaining values in the empirical bayes column
     # equal to this estimate
     results = fold_change.iloc[no_of_guides - (half_window_size + 1)][empirical_bayes_id]
-    fold_change[empirical_bayes_id][no_of_guides - half_window_size:] = results
+    fold_change.iloc[no_of_guides - half_window_size:, fold_change.columns.get_loc(empirical_bayes_id)] = results
 
     # Calculate the z_score for each guide (fc/eb_std)
     log_.debug('Calculating guide-level z-scores')
