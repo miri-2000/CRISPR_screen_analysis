@@ -1,5 +1,5 @@
 # analysis_tools: Helper script required for running R scripts and other python files.
-# Last modified 19.11.2023
+# Last modified 02.10.2024
 # ------------------------------------
 import re
 import os
@@ -56,7 +56,7 @@ def run_script(script_file, additional_args=None):
     """
 
     # Identify where the Rscript.exe file is located on the pc
-    if script_file.endswith("R"):
+    if script_file.suffix == ".R":
         command = ["Rscript", script_file]
     else:
         command = [sys.executable, script_file]
@@ -67,7 +67,7 @@ def run_script(script_file, additional_args=None):
     # Set up a try-except statement to condcatch occurring errors while executing the R file
     try:
         result = subprocess.run(args=command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if not script_file.endswith("R"):
+        if not script_file.suffix == ".R":
             print(result.stderr)
     except subprocess.CalledProcessError as e:
         print("Command returned non-zero exit status:", e.returncode)
