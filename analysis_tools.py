@@ -3,6 +3,8 @@
 # ------------------------------------
 import re
 import os
+import sys
+
 import pandas as pd
 import subprocess
 
@@ -12,7 +14,7 @@ exe_files = {}
 
 def assign_type(genes, essential_list, non_essential_list):
     """
-    Assign the type (target, essential, non-essential, non-targeting) of
+    This function assigns the type (target, essential, non-essential, non-targeting) of
     the targeted genes to each guide using the given lists of essential and non-essential genes.
 
     :param genes: Pandas dataframe column with the gene names
@@ -20,7 +22,6 @@ def assign_type(genes, essential_list, non_essential_list):
     :param non_essential_list: Pandas dataframe column with non-essential genes
     :return: types: The types of each gene in the genes variable
     """
-
     # Specify how non-targeting control rows look like
     pattern = re.compile(r"Non-Targeting(_| )Control")
 
@@ -55,53 +56,21 @@ def run_script(script_file, additional_args=None):
     """
 
     # Identify where the Rscript.exe file is located on the pc
-    exe_file = get_exe(script_file)
-    command = [exe_file, script_file]
+    if script_file.endswith("R"):
+        command = ["Rscript", script_file]
+    else:
+        command = [sys.executable, script_file]
     if additional_args is not None:
         command += additional_args
+    print(command)
 
-    # Set up a try-except statement to catch occurring errors while executing the R file
+    # Set up a try-except statement to condcatch occurring errors while executing the R file
     try:
         result = subprocess.run(args=command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if not exe_file.endswith("Rscript.exe"):
+        if not script_file.endswith("R"):
             print(result.stderr)
     except subprocess.CalledProcessError as e:
         print("Command returned non-zero exit status:", e.returncode)
         print("Standard Output:", e.stdout)
         print("Standard Error:", e.stderr)
         raise SystemExit()
-
-
-def get_exe(script_file):
-    """
-    This function is called to return the path of the R and Python exe files.
-
-    :param script_file: File path of the script to be run
-
-    :return: File path to the exe file
-    """
-
-    global exe_files
-
-    if script_file.suffix == ".R":
-        program = "R"
-        exe_name = "Rscript.exe"
-        # Specify the path that should contain the R exe file
-        path_to_search = r"C:\Users\Miriam\AppData\Local\Programs\R"
-    else:
-        exe_name = "python.exe"
-        program = "Python"
-        # Specify the path that should contain the Python exe file
-        path_to_search = r"C:\Users\Miriam\PycharmProjects"
-
-    if program not in exe_files:
-        # Use the os.walk function to traverse the directory tree
-        for dirpath, dirnames, filenames in os.walk(path_to_search):
-            if exe_name in filenames:
-                exe_files[program] = os.path.join(dirpath, exe_name)
-                break
-        else:
-            raise FileNotFoundError(
-                f"{exe_name} cannot be found on your computer. Please check if {program} is installed.")
-
-    return exe_files[program]
