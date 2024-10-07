@@ -12,7 +12,7 @@
 from pathlib import Path
 import pandas as pd
 import re
-from analysis_tools_p_r_installed import assign_type, run_script
+from analysis_tools import assign_type, run_script
 import logging as log
 
 log.basicConfig(level=log.DEBUG)
