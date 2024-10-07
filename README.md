@@ -1,6 +1,8 @@
 # Steps for the CRISPR screen analysis
 
-1. Download [Anaconda](https://www.anaconda.com/download)
+## Windows Setup
+
+1. Download [Anaconda](https://www.anaconda.com/download) (conda: 4.13.0)
 
 2. Open the Anaconda prompt and change into a folder location of your choice to store the program
 
@@ -8,7 +10,7 @@
 
    ```cmd
     git clone https://github.com/miri-2000/CRISPR_screen_analysis.git
-    cd CRISPR_screen_analysis\scripts
+    cd CRISPR_screen_analysis/scripts
     conda env create -f environment.yml
     conda activate crispr_env
     Rscript install_r_packages.R
