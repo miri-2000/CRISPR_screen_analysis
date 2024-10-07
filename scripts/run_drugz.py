@@ -10,7 +10,7 @@ import sys
 
 
 class Args:
-    infile = os.path.abspath(fnmatch.filter(os.listdir('..'), '*drugz-input.txt')[0])
+    infile = os.path.abspath(fnmatch.filter(os.listdir('.'), '*drugz-input.txt')[0])
     drugz_output_file = "./drugz/drugz_"
     gRNA_outfile = "./drugz/gRNA_"
     target_samples = sys.argv[1]
