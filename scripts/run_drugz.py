@@ -3,7 +3,7 @@
 # by the user.
 # Last modified 02.10.2024
 # ------------------------------------
-from scripts import drugZ
+import drugZ
 import os
 import fnmatch
 import sys
