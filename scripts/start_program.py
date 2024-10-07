@@ -41,9 +41,9 @@
 import os
 from pathlib import Path
 import logging as log
-import data_preparation
+from scripts import data_preparation
 import result_analysis
-from analysis_tools import run_script
+from scripts.analysis_tools_p_r_installed import run_script
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)

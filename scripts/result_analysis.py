@@ -6,7 +6,7 @@ import logging as log
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from analysis_tools import run_script, assign_type
+from scripts.analysis_tools_p_r_installed import run_script, assign_type
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)
