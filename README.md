@@ -31,7 +31,7 @@
 
 # Expected Input
 
-Most of the times, the program is expected to run with these changes, considering that the read counts and library
+The program is expected to run with different CRISPR screens, considering that the read counts and library
 file do not vary a lot when using the same screening library and sequencing facility. In case you run into problems
 while running the program, please verify that your input files fulfill the requirements stated below:
 
@@ -68,7 +68,7 @@ consists of: *Timepoint*\_*culture-details*\_*treatment\_replicate*
 1) <u>Timepoint</u>: "t0", "t1",... (upper and lowercase possible)
 2) <u>Details of the cell culture</u>: "3d2d", ”3d”,”2d”,"3d_to_2d", … (upper and lowercase possible)
 3) <u>Treatment</u> (optional): "tr","ut", "untreated","treated",... (upper and lowercase possible)
-4) <u>Replicate information</u>: "\_r" or ”\_rep” followed by a digit (upper and lowercase possible)
+4) <u>Replicate information</u>: "\_r" or "\_rep" followed by a digit (upper and lowercase possible)
 
 In case the condition name contains a barcode after the condition name, separated by a colon (":"), it will be
 automatically removed. Valid condition names are: "T1_3D_to_2D_Rep3:TGGTCA", "t1_2d_Treated_rep26",...
@@ -128,7 +128,7 @@ the first underscore and use it as a prefix for the output files (e.g. "1234_cou
 
 - **Default values for Brunello screens:** "guide_mm1_mismatch1", "mismatch1_", "nohit_cols", "guide_mm1_nohit"
     - The mentioned columns are columns that are created in case a read matches the reads from the same gRNA of a
-      certain condition (eg t0_r1) with a 1 base pair mismatch
+      certain condition (e.g. t0_r1) with a 1 base pair mismatch
 
 - **Example:** column “t1_r2_mismatch1_t0_r1” will be removed as it contains “mismatch1_”
 
@@ -143,7 +143,7 @@ the first underscore and use it as a prefix for the output files (e.g. "1234_cou
 - **Definition:** used to specify any additional text that should be removed from the column with the sgRNA names
 - **Default values for Brunello screens:** “:mismatch”
     - **Rationale:** Since the guides can be very similar with respect to the read sequences, sometimes a read can
-      appear to be a perfect match for one sgRNA while also matching another sgRNA if 1 base pair is changed. Therefore
+      appear to be a perfect match for one sgRNA while also matching another sgRNA if 1 base pair is changed. Therefore,
       some rows can end up looking like “USP17L7-1:mismatch1_USP17L19-1”. This indicates that the read matches USP17L7-1
       perfectly while it has a 1 base pair mismatch for USP17L19-1. Therefore, as by default it is better to only
       consider perfect matches, everything after “:mismatch” will be removed (USP17L7-1:mismatch1_USP17L19-1->
@@ -186,7 +186,7 @@ This file shows the R<sup>2</sup>-value of each condition to indicate how good t
 Two normalization methods are compared: the median of ratios sizefactor calculation (used by DeSeq2) and the calculation
 of sizefactors using the geometric mean alone .
 
-In the past DeSeq2 was a very good way to compute sizefactors that are used as part of the normalization. Nowadays the
+In the past DeSeq2 was a very good way to compute sizefactors that are used as part of the normalization. Nowadays, the
 computation using the geometric mean alone has been found to work better. To compare which of the two techniques are
 better for the current plot, the R<sup>2</sup>-values of the two sizefactors are compared for each condition (e.g.
 t2_2d_tr,...).
@@ -218,13 +218,13 @@ differences in the sum, the normalization step should be checked.
 
 This figure displays the distribution of the sum of reads per guide. The x-axis indicates the rank (the index of each
 guide when sorting the guides by the sum of their reads (displayed in %)), while the y-axis shows the sum of the reads
-per guide on a log10 scale (eg log10 of 2 = 100 reads). In the title, the percentage of guides that have a sum of reads
+per guide on a log10 scale (e.g. log10 of 2 = 100 reads). In the title, the percentage of guides that have a sum of reads
 above a log10 of 2 is displayed to indicate whether there are big differences between different conditions.
 
 ## Correlation plot
 
 This figure compares the distribution of read sums per guide between the replicates of each condition in a pairwise
-manner. The read sums are displayed on a log10 scale (eg log10 of 2 = 100 reads) and the classes (target, essential,
+manner. The read sums are displayed on a log10 scale (e.g. log10 of 2 = 100 reads) and the classes (target, essential,
 non-essential, non-targeting) are shown by different colours. The R<sup>2</sup>-value of the pairwise comparison between
 the replicates of each condition can be seen in above the plot.
 
@@ -320,7 +320,7 @@ HER2-targeted therapy".
 
 In case you want to know about DrugZ, please refer
 to [the Publication describing DrugZ](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-019-0665-3) and
-to [the Github page](https://github.com/hart-lab/drugz) for the source code.
+to [the GitHub page](https://github.com/hart-lab/drugz) for the source code.
 
 
 
