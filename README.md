@@ -8,7 +8,7 @@
 
    ```cmd
     git clone https://github.com/miri-2000/CRISPR_screen_analysis.git
-    cd CRISPR_screen_analysis/scripts
+    cd CRISPR_screen_analysis\scripts
     conda env create -f environment.yml
     conda activate crispr_env
     Rscript install_r_packages.R
