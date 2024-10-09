@@ -29,18 +29,24 @@
    python file_based_launch.py
    ```
 
-5. If analysis went well, the run will end with "Analysis of the given dataset completed"
+5. If the analysis went well, the run will end with "Analysis of the given dataset completed". In case you want to run
+   another screen analysis just modify the input parameters in the screen window. If you are done, close the window to
+   stop the program.
 
 ## Example run
 
-* The example directory contains the data from a CRISPR screen performed at the Netherlands Cancer Institute (Publication can be found [here](https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.biorxiv.org%2Fcontent%2F10.1101%2F2023.08.17.553681v1&data=05%7C02%7Cmiriam.mueller%40ru.nl%7C1e2c665e10cd45619ea908dce6f4554d%7C084578d9400d4a5aa7c7e76ca47af400%7C1%7C0%7C638639184354131836%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=7Xeqvu5LtzmaMkibjqBgYJn3XG3exG5ulVol59X8fiA%3D&reserved=0))
+* The example directory contains the data from a CRISPR screen performed at the Netherlands Cancer Institute (
+  Publication can be
+  found [here](https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.biorxiv.org%2Fcontent%2F10.1101%2F2023.08.17.553681v1&data=05%7C02%7Cmiriam.mueller%40ru.nl%7C1e2c665e10cd45619ea908dce6f4554d%7C084578d9400d4a5aa7c7e76ca47af400%7C1%7C0%7C638639184354131836%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=7Xeqvu5LtzmaMkibjqBgYJn3XG3exG5ulVol59X8fiA%3D&reserved=0))
 
 * In order to run the example after performing the set up, run the command with the default parameters:
-   run:
    ```cmd
    python file_based_launch.py
    ```
 * The results will be stored in "example/results"
+
+* To ensure that the example execution went well you can compare whether the results included in this repository
+  match your result after execution.
 
 # Expected Input
 
@@ -231,7 +237,8 @@ differences in the sum, the normalization step should be checked.
 
 This figure displays the distribution of the sum of reads per guide. The x-axis indicates the rank (the index of each
 guide when sorting the guides by the sum of their reads (displayed in %)), while the y-axis shows the sum of the reads
-per guide on a log10 scale (e.g. log10 of 2 = 100 reads). In the title, the percentage of guides that have a sum of reads
+per guide on a log10 scale (e.g. log10 of 2 = 100 reads). In the title, the percentage of guides that have a sum of
+reads
 above a log10 of 2 is displayed to indicate whether there are big differences between different conditions.
 
 ## Correlation plot

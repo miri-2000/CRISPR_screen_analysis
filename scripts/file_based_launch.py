@@ -9,7 +9,7 @@ class Args:
     library_file = Path(__file__).parents[1] / "example" / "library_file.txt"
     target_samples = "t7,t29"
     reference_samples = "t0,t7"
-    unwanted_columns = "guide_mm1_mismatch1,mismatch1_"
+    unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
     unwanted_rows = ""
     unwanted_row_substrings = ":mismatch"
     threshold_reads = 0
