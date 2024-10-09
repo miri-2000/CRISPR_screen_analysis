@@ -31,6 +31,17 @@
 
 5. If analysis went well, the run will end with "Analysis of the given dataset completed"
 
+## Example run
+
+* The example directory contains the data from a CRISPR screen performed at the Netherlands Cancer Institute (Publication can be found [here](https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.biorxiv.org%2Fcontent%2F10.1101%2F2023.08.17.553681v1&data=05%7C02%7Cmiriam.mueller%40ru.nl%7C1e2c665e10cd45619ea908dce6f4554d%7C084578d9400d4a5aa7c7e76ca47af400%7C1%7C0%7C638639184354131836%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C0%7C%7C%7C&sdata=7Xeqvu5LtzmaMkibjqBgYJn3XG3exG5ulVol59X8fiA%3D&reserved=0))
+
+* In order to run the example after performing the set up, run the command with the default parameters:
+   run:
+   ```cmd
+   python file_based_launch.py
+   ```
+* The results will be stored in "example/results"
+
 # Expected Input
 
 The program is expected to run with different CRISPR screens, considering that the read counts and library
