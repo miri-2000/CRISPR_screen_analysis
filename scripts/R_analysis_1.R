@@ -20,9 +20,8 @@ library("RColorBrewer")
 library(RUnit)
 library(reshape2)
 library(ggplot2)
-library(here)
 
-source(here("R_analysis_1.R"))
+source(here("analysis_tools.R"))
 
 
 # Function storing default colors for plots for a maximum of 19 colors
