@@ -21,7 +21,7 @@ library(RUnit)
 library(reshape2)
 library(ggplot2)
 
-source("D:\\D\\Ausbildung\\Master\\1st year\\Internships\\NKI\\Report\\Program test\\Program files\\analysis_tools.R")
+source("analysis_tools.R")
 
 
 # Function storing default colors for plots for a maximum of 19 colors

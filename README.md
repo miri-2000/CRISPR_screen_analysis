@@ -9,6 +9,7 @@
 3. Paste the following into the prompt
 
    ```cmd
+    conda install anaconda::git
     git clone https://github.com/miri-2000/CRISPR_screen_analysis.git
     cd CRISPR_screen_analysis/scripts
     conda env create -f environment.yml
