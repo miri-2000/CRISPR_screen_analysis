@@ -11,4 +11,4 @@ if (!requireNamespace("BiocManager", quietly = TRUE)) {
 # Install DESeq2
 BiocManager::install("DESeq2")
 
-install.packages(c("gplots","RUnit"), repos = "https://cloud.r-project.org")
+install.packages(c("gplots","RUnit","here"), repos = "https://cloud.r-project.org")
