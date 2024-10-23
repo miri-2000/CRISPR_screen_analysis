@@ -21,7 +21,9 @@ library(RUnit)
 library(reshape2)
 library(ggplot2)
 
-source(file.path(dirname(whereami::thisfile()), "analysis_tools.R"))
+analysis_tool_path <- file.path(dirname(whereami::thisfile()), "analysis_tools.R")
+
+source(analysis_tool_path)
 
 # Function storing default colors for plots for a maximum of 19 colors
 getDefaultColors <- function(n,warning=T) {
