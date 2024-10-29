@@ -1,0 +1,19 @@
+INPUT_FIELDS = [
+    "input_file",
+    "essential_genes",
+    "non_essential_genes",
+    "library_file",
+    "target_samples",
+    "reference_samples",
+    "unwanted_columns",
+    "unwanted_rows",
+    "unwanted_row_substrings",
+    "threshold_reads",
+    "x_axis",
+    "threshold_fdr",
+    "top",
+    "distribution_condition1",
+    "distribution_condition2",
+    "replicate_type",
+    "working_dir"
+]
