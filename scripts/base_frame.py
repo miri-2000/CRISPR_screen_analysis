@@ -217,7 +217,7 @@ class BaseFrame(ttk.Frame):
         invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
         if invalid_value_labels:
             messagebox.showwarning("Missing information",
-                                   f"The following fields cannot remain empty: {', '.join(invalid_value_labels)}. "
+                                   f"The following fields cannot remain empty: {", ".join(invalid_value_labels)}. "
                                    f"Please specify the parameters.")
             return True
 

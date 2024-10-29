@@ -94,10 +94,10 @@ class DataPreparation:
         :return: Tuple with the input files stored as dataframes
         """
 
-        read_data = pd.read_csv(data_file, sep="\t", header=0)
+        read_data = pd.read_csv(data_file, sep='\t', header=0)
         essential_genes = pd.read_csv(essential_genes_file)
         non_essential_genes = pd.read_csv(non_essential_genes_file)
-        library = pd.read_csv(library_file, sep="\t")
+        library = pd.read_csv(library_file, sep='\t')
 
         return read_data, essential_genes, non_essential_genes, library
 
@@ -201,7 +201,8 @@ class DataPreparation:
             columns=read_data.filter(regex=unwanted_columns.replace(",", "|")))
         if length_before != len(read_data.columns):
             log_.debug(
-                f"Number of columns before: {length_before}, after: {len(read_data.columns)}, diff: {length_before - len(read_data.columns)}")
+                f"Number of columns before: {length_before}, after: {len(read_data.columns)}, diff: "
+                f"{length_before - len(read_data.columns)}")
         else:
             log_.debug("No unwanted columns identified")
 
@@ -220,10 +221,11 @@ class DataPreparation:
         log_.debug("Removing unwanted rows")
         log_.debug(
             f"Rows containing (one of) the following in the sgRNA name will be removed: {unwanted_rows}")
-        rows_to_be_removed = read_data["sgRNA"].str.contains(unwanted_rows.replace(",", "|"))
+        rows_to_be_removed = read_data["sgRNA"].str.contains(unwanted_rows.replace(',', '|'))
         if any(rows_to_be_removed):
             log_.debug(
-                f"Number of rows before: {len(read_data)}, after: {len(read_data[~rows_to_be_removed])}, diff: {len(read_data[rows_to_be_removed])}")
+                f"Number of rows before: {len(read_data)}, after: {len(read_data[~rows_to_be_removed])}, diff: "
+                f"{len(read_data[rows_to_be_removed])}")
             read_data = read_data[~rows_to_be_removed]
         else:
             log_.debug("No unwanted rows identified")
@@ -243,7 +245,7 @@ class DataPreparation:
         log_.debug("Removing unwanted substrings from rows of column sgRNA")
         log_.debug(
             f"The following substrings will be removed from the sgRNA name: {unwanted_row_substrings}")
-        rows_to_be_edited = read_data[read_data["sgRNA"].str.contains(unwanted_row_substrings.replace(",", "|"))]
+        rows_to_be_edited = read_data[read_data["sgRNA"].str.contains(unwanted_row_substrings.replace(',', '|'))]
         if len(rows_to_be_edited) > 0:
             for substring in unwanted_row_substrings.split(','):
                 read_data['sgRNA'] = read_data['sgRNA'].str.replace(substring + '.*', '', regex=True)
@@ -335,7 +337,8 @@ class DataPreparation:
         read_data.insert(2, "type", assign_type(read_data['Gene'], essential_genes, non_essential_genes))
 
         log_.debug(
-            f"\nDataset composition:\nNumber of essential genes (p) = {len(set(read_data['Gene'][read_data['type'] == 'p']))}, "
+            f"\nDataset composition:\nNumber of essential genes (p) = {len(set(read_data['Gene']
+                                                                               [read_data['type'] == 'p']))}, "
             f"Number of sgRNAs = {len(read_data['Gene'][read_data['type'] == 'p'])}\n"
             f"Number of non-essential genes (n) = {len(set(read_data['Gene'][read_data['type'] == 'n']))}, "
             f"Number of sgRNAs = {len(read_data['Gene'][read_data['type'] == 'n'])}\n"
@@ -406,7 +409,8 @@ class DataPreparation:
         # Check if the sum of the total and filtered rows are the same
         if len(read_data) != len(read_data[row_sums > threshold_reads]):
             log_.debug(
-                f"Number of rows before filtering: {len(read_data)}, after filtering: {len(read_data[row_sums > threshold_reads])},"
+                f"Number of rows before filtering: {len(read_data)}, after filtering: "
+                f"{len(read_data[row_sums > threshold_reads])},"
                 f" difference: {len(read_data[row_sums <= threshold_reads])}")
             read_data = read_data[row_sums > threshold_reads]
         else:
@@ -447,18 +451,18 @@ class DataPreparation:
         # first combine the values vertically to change the column names
         # and then transpose (allows creating correct row indices)
         log_.debug("Creating one dataframe with column sums from conditions and guide_mm1 plus the nohit_row")
-        sumDf = pd.concat([sum_conditions, sum_guide_mm1.T, nohit_guide.T], axis=1)
-        sumDf.columns = ["sum_conditions", "sum_guide_mm1", "nohit_guide"]
-        sumDf = sumDf.T
+        sum_df = pd.concat([sum_conditions, sum_guide_mm1.T, nohit_guide.T], axis=1)
+        sum_df.columns = ["sum_conditions", "sum_guide_mm1", "nohit_guide"]
+        sum_df = sum_df.T
 
         # Calculate the sum for each row and column
         log_.debug("Calculating the sum for each row and column of the new dataframe")
-        sumDf['row_sum'] = sumDf.sum(axis=1)
-        sumDf.loc["col_sum", :] = sumDf.sum(axis=0)
+        sum_df['row_sum'] = sum_df.sum(axis=1)
+        sum_df.loc["col_sum", :] = sum_df.sum(axis=0)
 
         # Write the result to a CSV file
         log_.debug(f"Storing the final table in {summary_file}")
-        sumDf.to_csv(summary_file, index=True, sep=";")
+        sum_df.to_csv(summary_file, index=True, sep=";")
 
     def compare_with_library(self, data, library, essential_genes, non_essential_genes):
         """
@@ -484,14 +488,15 @@ class DataPreparation:
         # Calculate the ratio of the number of all sgRNAs contained in the read counts file compared to the number of
         # sgRNAs in the library for each type
         log_.debug("\nLibray composition")
-        for gene_type in ["p", "n", "o", "x"]:
+        for gene_type in ['p', 'n', 'o', 'x']:
             if len(lib_copy[lib_copy['type'] == gene_type]) != 0:
                 ratio = round(100 * len(data[data['type'] == gene_type]) / len(lib_copy[lib_copy['type'] == gene_type]),
                               1)
             else:
                 ratio = "-Inf"
             log_.debug(
-                f"Number of type {gene_type} sgRNAs in library: {len(lib_copy[lib_copy['type'] == gene_type])}, in dataset: {len(data[data['type'] == gene_type])}, in percentage: {ratio} %")
+                f"Number of type {gene_type} sgRNAs in library: {len(lib_copy[lib_copy['type'] == gene_type])}, "
+                f"in dataset: {len(data[data['type'] == gene_type])}, in percentage: {ratio} %")
 
     def normalize_data(self, conditions):
         # Remove the replicate notation ("_r1") from the condition names
