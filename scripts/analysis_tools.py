@@ -23,7 +23,7 @@ def assign_type(genes, essential_list, non_essential_list):
     :return: types: The types of each gene in the genes variable
     """
     # Specify how non-targeting control rows look like
-    pattern = re.compile(r"Non-Targeting(_| )Control")
+    pattern = re.compile(r"Non[-_. ]Targeting[-_. ]Control", re.IGNORECASE)
 
     # Create a mask for essential and non-essential genes
     is_essential = genes.isin(essential_list.iloc[:, 0])

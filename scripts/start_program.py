@@ -41,7 +41,7 @@
 import os
 from pathlib import Path
 import logging as log
-import data_preparation
+from data_preparation import DataPreparation
 import result_analysis
 from analysis_tools import run_script
 
@@ -114,7 +114,13 @@ class CRISPRScreenAnalysis:
 
         log_.info(f"Preparing dataset for hit identification")
 
-        data_preparation.data_preparation(self)
+        data_preparation = DataPreparation(self.input_file, self.essential_genes, self.non_essential_genes,
+                                           self.library_file, self.unwanted_columns, self.unwanted_rows,
+                                           self.unwanted_row_substrings, self.summary_file, self.threshold_reads,
+                                           self.output_file, self.dataset, self.replicate_type, self.target_samples,
+                                           self.reference_samples, self.distribution_condition1,
+                                           self.distribution_condition2)
+        data_preparation.prepare_data()
 
     def perform_drugz_analysis(self):
         """

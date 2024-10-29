@@ -4,7 +4,7 @@ from page_two import PageTwo
 from page_three import PageThree
 
 
-class SampleApp(tk.Tk):
+class CRISPRApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
@@ -54,5 +54,5 @@ class SampleApp(tk.Tk):
 
 # Run the application
 if __name__ == "__main__":
-    app = SampleApp()
+    app = CRISPRApp()
     app.mainloop()
