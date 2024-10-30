@@ -7,7 +7,6 @@ class InputValidator(ABC):
     def __init__(self, args):
         self.working_dir = args.working_dir
         self.input_file = args.input_file
-        self.dataset = os.path.basename(self.input_file).split('_')[0]
         self.target_samples = args.target_samples
         self.reference_samples = args.reference_samples
         self.essential_genes = args.essential_genes
@@ -23,7 +22,7 @@ class InputValidator(ABC):
         self.distribution_condition1 = args.distribution_condition1
         self.distribution_condition2 = args.distribution_condition2
         self.replicate_type = args.replicate_type
-        self.input_data = pd.read_csv(self.input_file, sep="\t")
+        self.input_data = ""
 
     def validate_files(self):
         self.validate_file_path()
@@ -43,6 +42,7 @@ class InputValidator(ABC):
                     f"file. The file must either be a CSV or TXT file.")
 
     def validate_input_file(self):
+        self.input_data = pd.read_csv(self.input_file, sep="\t")
 
         if (len(self.input_data.iloc[:, 0].unique()) != len(self.input_data.iloc[:, 0]) or
                 len(self.input_data.iloc[:, 1].unique()) != len(self.input_data.iloc[:, 1])):
