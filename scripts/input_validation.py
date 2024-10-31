@@ -102,7 +102,9 @@ class InputValidator(ABC):
                 self.abort(f"The parameter '{int_field_var}' needs to be a whole number.")
 
     def validate_threshold_fdr(self):
-        if not isinstance(self.threshold_fdr, (int, float)) and not 0 <= self.threshold_fdr <= 1:
+        if not isinstance(self.threshold_fdr, (int, float)):
+            self.abort(f"The parameter 'threshold_fdr' needs to be a number between 0 and 1.")
+        if not 0 <= self.threshold_fdr <= 1:
             self.abort(f"The parameter 'threshold_fdr' needs to be a number between 0 and 1.")
 
     def validate_choice_fields(self):
@@ -111,7 +113,7 @@ class InputValidator(ABC):
             choice = getattr(self, choice_field, None)
 
             if choice not in choice_values:
-                self.abort(f"The replicate type can only either be '{choice_values[0]}' or '{choice_values[1]}'.")
+                self.abort(f"The {choice_field} can only either be '{choice_values[0]}' or '{choice_values[1]}'.")
 
     def validate_working_dir(self):
         if not os.path.isdir(self.working_dir):
