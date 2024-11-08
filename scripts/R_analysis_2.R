@@ -1,4 +1,4 @@
-# R_analysis_1: Script that creates gene- and guide-level significance plots
+# R_analysis_2: Script that creates gene- and guide-level significance plots
 # Last modified 19.11.2023
 # --------------------------------------------------------------------------
 
@@ -207,14 +207,17 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
           xBreaks=xBreaks
           
           plot <- ggplot(data=data1,aes(x=data1[,xCol],y=data1[,fdrCol])) +
-            #geom_rect(data=NULL,aes(xmin=thLfc,xmax=xMax,ymin=0.1,ymax=yMin),fill="lightgreen",show.legend=F) +
             geom_point(size=2,color="grey90") +
-            scale_y_continuous(trans=reverselog_trans(10)) + #, ,,labels=yBreaks ,limits=yLimits,breaks=yBreaks log10_reverse_trans()
+	    scale_y_continuous(
+              trans = reverselog_trans(10),
+              breaks = log_breaks(base = 10),  # Automatically generate breaks based on log scale
+              #labels = scales::trans_format("log10", scales::math_format(10^.x))  # Optional: format labels
+            ) +
+            #scale_y_continuous(trans=reverselog_trans(10)) +
             scale_x_continuous(limits=xLimits,breaks=xBreaks) +
             geom_point(data=significant_hits,aes(x=significant_hits[,xCol],y=significant_hits[,fdrCol],color=Gene),size=2,show.legend = show.legend) + #,alpha=0.4 
-            geom_text_repel(data=significant_hits,aes(x=significant_hits[,xCol],y=significant_hits[,fdrCol],label=Gene,color=Gene),min.segment.length=0,show.legend = FALSE,nudge_y = 0.05,max.overlaps = 50) +
+            geom_text_repel(data=significant_hits,aes(x=significant_hits[,xCol],y=significant_hits[,fdrCol],label=Gene,color=Gene),min.segment.length=0,show.legend = FALSE,nudge_x = 0.1,nudge_y = 0.1, max.overlaps = 50,force = 2,box.padding = 0.5,point.padding = 0.5,) +
             ggtitle(paste(title,": drugZ results",sep="")) +
-            #theme(plot.title = element_text(hjust = 0.5)) + # + 
             geom_hline(yintercept = threshold_fdr,linetype="dashed") +
             geom_vline(xintercept = 0,linetype="solid") +
             xlab(xLabel) +
@@ -249,8 +252,6 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
             geom_abline(intercept=thDiff,linetype="dashed") +
             xlab(xCol2) +
             ylab(yCol2)
-          # scale_x_continuous(limit=limits,breaks=breaks) +
-          # scale_y_continuous(limit=limits,breaks=breaks) +
           plot <- addTheme(plot,base=10)
         })
       }
