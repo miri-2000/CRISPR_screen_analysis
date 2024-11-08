@@ -347,7 +347,7 @@ createRawNormBarplots <- function(input_raw,input_norm,Conditions,writeFile=T,fi
       if (plotformat=="pdf"){
         width <- Nrcols*9
         height <- Nrrows*6.5
-        ggsave(filename = paste(filename,".pdf"),plot=plot,width=width,height=height,limitsize = F,,bg="white")
+        ggsave(filename = paste0(filename,".pdf"),plot=plot,width=width,height=height,limitsize = F,,bg="white")
       }else { # (plotformat=="jpg"){
         width <- Nrcols*600
         height <- Nrrows*400
