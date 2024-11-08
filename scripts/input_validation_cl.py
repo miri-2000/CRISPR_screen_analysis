@@ -4,7 +4,7 @@ from input_validation import InputValidator
 
 
 class InputValidatorCL(InputValidator):
-    def __init__(self, args):
+    def __init__(self,args):
         super().__init__(args)
 
     def validate(self):
