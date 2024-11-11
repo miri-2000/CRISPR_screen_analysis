@@ -66,10 +66,11 @@ class StartPage(BaseFrame):
         self.invalid_file_types.clear()
         self.invalid_values.clear()
 
-        self.add_trace(self.controller.shared_data["target_samples"], self.indicator_labels["Name of target samples:"],
+        self.add_trace(self.controller.shared_data["target_samples"], self.indicator_labels["Name of treated "
+                                                                                            "conditions/timepoints:"],
                        "non_empty")
         self.add_trace(self.controller.shared_data["reference_samples"],
-                       self.indicator_labels["Name of reference samples:"], "non_empty")
+                       self.indicator_labels["Name of untreated/baseline conditions/timepoints:"], "non_empty")
 
         invalid_value_flag = self.check_invalid_values()
         invalid_file_type_flag = self.check_invalid_file_types()
