@@ -1,7 +1,7 @@
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
 from tkinter import messagebox
-
+# from input_validation_gui_stateless import InputValidatorGUI
 
 class StartPage(BaseFrame):
     """Start page of the CRISPR screen analysis tool."""
@@ -32,20 +32,20 @@ class StartPage(BaseFrame):
     def create_widgets(self):
         """Create input fields and buttons for user parameters."""
         # Targets entry
-        self.create_labeled_entry(label_text="Name of target samples:", command_action=lambda: self.show_info(
+        self.create_labeled_entry(label_text="Name of treated conditions/timepoints:", command_action=lambda: self.show_info(
             "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
                                   textvariable=self.controller.shared_data["target_samples"], row=2)
 
         # Add a label or star indicator next to each entry
-        self.add_indicator_label(row=2, label_text="Name of target samples:")
+        self.add_indicator_label(row=2, label_text="Name of treated conditions/timepoints:")
 
         # References entry
-        self.create_labeled_entry("Name of reference samples:",
+        self.create_labeled_entry("Name of untreated/baseline conditions/timepoints:",
                                   lambda: self.show_info("Baseline conditions (e.g. with no added drugs)"),
                                   self.controller.shared_data["reference_samples"], 3)
 
         # Add a label or star indicator next to each entry
-        self.add_indicator_label(row=3, label_text="Name of reference samples:")
+        self.add_indicator_label(row=3, label_text="Name of untreated/baseline conditions/timepoints:")
 
         for i, (label_text, var) in enumerate(self.file_paths.items(), start=4):
             self.create_labeled_entry(f"{label_text}:",
@@ -59,6 +59,9 @@ class StartPage(BaseFrame):
             self.add_indicator_label(row=i, label_text=label_text)
 
     def validate_and_proceed(self):
+        # validator = InputValidatorGUI()
+        # if validator.validate_page_one(self.file_paths):
+        #     self.controller.show_frame(self.get_next_class())
         """Validate input fields and navigate to the next page if valid."""
         self.invalid_file_types.clear()
         self.invalid_values.clear()

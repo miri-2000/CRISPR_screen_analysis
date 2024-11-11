@@ -13,8 +13,8 @@ class PageThree(BaseFrame):
         # Define class attributes
         self.top_entry = ttk.Entry(self, textvariable=self.controller.shared_data["top"])
         self.threshold_fdr_entry = ttk.Entry(self, textvariable=self.controller.shared_data["threshold_fdr"])
-        self.condition = {"Positive Control": self.controller.shared_data["distribution_condition1"],
-                          "Negative Control": self.controller.shared_data["distribution_condition2"]}
+        self.condition = {"Treated condition": self.controller.shared_data["distribution_condition1"],
+                          "Untreated/Baseline Control": self.controller.shared_data["distribution_condition2"]}
 
         self.create_header("Visualization and Storage Settings")
         self.create_description("Visualization settings (default values shown in line) and storage settings\n")
@@ -56,20 +56,28 @@ class PageThree(BaseFrame):
         self.create_subheader("Distribution Plot", 6)
 
         # Positive Control entry
-        self.create_labeled_entry("Positive Control:", lambda: self.show_info("Sample that should be taken as the "
-                                                                              "positive control of the screen"),
+        self.create_labeled_entry("Treated condition:", lambda: self.show_info("Target condition to compare "
+                                                                               "against a baseline condition for the "
+                                                                               "comparison of the log-fold read count "
+                                                                               "change of the positive vs negative "
+                                                                               "control genes"),
                                   self.controller.shared_data["distribution_condition1"], 7)
 
         # Add a label or star indicator next to each entry
-        self.add_indicator_label(row=7, label_text="Positive Control")
+        self.add_indicator_label(row=7, label_text="Treated condition")
 
         # Negative Control entry
-        self.create_labeled_entry("Negative Control:", lambda: self.show_info("Sample that should be taken as the "
-                                                                              "negative control of the screen"),
+        self.create_labeled_entry("Untreated/Baseline Control:", lambda: self.show_info("Baseline condition to"
+                                                                                        " compare against a target "
+                                                                                        "condition for the "
+                                                                                        "comparison of the log-fold "
+                                                                                        "read count change of the "
+                                                                                        "positive vs negative control "
+                                                                                        "genes"),
                                   self.controller.shared_data["distribution_condition2"], 8)
 
         # Add a label or star indicator next to each entry
-        self.add_indicator_label(row=8, label_text="Negative Control")
+        self.add_indicator_label(row=8, label_text="Untreated/Baseline Control")
 
         # Title label
         self.create_subheader("Correlation Plot", 9)
@@ -100,7 +108,7 @@ class PageThree(BaseFrame):
         """Create radio buttons for user parameters."""
         ttk.Label(self, text=label_text).grid(row=row, column=0, sticky="w", padx=20)
         ttk.Button(self, text="?", command=command_action, width=1).grid(row=row, column=0,
-                                                                                            sticky="e")
+                                                                         sticky="e")
         ttk.Radiobutton(self, text=button1_text, variable=variable, value=button1_text).grid(
             row=row, column=1, sticky="w")
         ttk.Radiobutton(self, text=button2_text, variable=variable,
