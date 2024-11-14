@@ -1,7 +1,7 @@
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
-from tkinter import messagebox
-# from input_validation_gui_stateless import InputValidatorGUI
+from input_validation_gui import InputValidatorGUI
+
 
 class StartPage(BaseFrame):
     """Start page of the CRISPR screen analysis tool."""
@@ -32,8 +32,9 @@ class StartPage(BaseFrame):
     def create_widgets(self):
         """Create input fields and buttons for user parameters."""
         # Targets entry
-        self.create_labeled_entry(label_text="Name of treated conditions/timepoints:", command_action=lambda: self.show_info(
-            "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
+        self.create_labeled_entry(label_text="Name of treated conditions/timepoints:",
+                                  command_action=lambda: self.show_info(
+                                      "Treated conditions (e.g. with exposure to drugs,...) to be compared against baseline conditions"),
                                   textvariable=self.controller.shared_data["target_samples"], row=2)
 
         # Add a label or star indicator next to each entry
@@ -59,36 +60,9 @@ class StartPage(BaseFrame):
             self.add_indicator_label(row=i, label_text=label_text)
 
     def validate_and_proceed(self):
-        # validator = InputValidatorGUI()
-        # if validator.validate_page_one(self.file_paths):
-        #     self.controller.show_frame(self.get_next_class())
-        """Validate input fields and navigate to the next page if valid."""
-        self.invalid_file_types.clear()
-        self.invalid_values.clear()
-
-        self.add_trace(self.controller.shared_data["target_samples"], self.indicator_labels["Name of treated "
-                                                                                            "conditions/timepoints:"],
-                       "non_empty")
-        self.add_trace(self.controller.shared_data["reference_samples"],
-                       self.indicator_labels["Name of untreated/baseline conditions/timepoints:"], "non_empty")
-
-        invalid_value_flag = self.check_invalid_values()
-        invalid_file_type_flag = self.check_invalid_file_types()
-
-        if not invalid_value_flag and not invalid_file_type_flag:
+        validator = InputValidatorGUI()
+        if validator.validate_page_one(self.file_paths):
             self.controller.show_frame(self.get_next_class())
-
-    def check_invalid_file_types(self):
-        """Check for any invalid file types."""
-        for label_text, var in self.file_paths.items():
-            self.add_trace(var, self.indicator_labels[label_text], "file_type")
-
-        invalid_value_labels = [k for k, v in self.invalid_file_types.items() if v is True]
-        if invalid_value_labels:
-            messagebox.showwarning("Invalid File Paths/Types",
-                                   f"The following paths are invalid: {', '.join(invalid_value_labels)}. The "
-                                   f"file path must be accurate and lead to a text or csv file.")
-            return True
 
     @staticmethod
     def get_next_class():

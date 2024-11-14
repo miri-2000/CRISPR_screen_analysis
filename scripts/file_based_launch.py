@@ -27,9 +27,9 @@ class Args:
 if __name__ == "__main__":
     args = Args()
 
-    # validator = InputValidatorCL()
-    # validator.validate(args.input_file, args.essential_genes, args.non_essential_genes,args.library_file)
-    validator = InputValidatorCL(args)
-    validator.validate()
+    validator = InputValidatorCL()
+    validator.validate(args.input_file, args.essential_genes, args.non_essential_genes, args.library_file,
+                       args.threshold_reads, args.top, args.threshold_fdr, args.x_axis, args.replicate_type,
+                       args.working_dir)
 
     CRISPRScreenAnalysis(args)

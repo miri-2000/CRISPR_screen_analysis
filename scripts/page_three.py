@@ -2,6 +2,7 @@ import tkinter.ttk as ttk
 from base_frame import BaseFrame
 from tkinter import messagebox
 from start_program import CRISPRScreenAnalysis
+from input_validation_gui import InputValidatorGUI
 
 
 class PageThree(BaseFrame):
@@ -68,12 +69,12 @@ class PageThree(BaseFrame):
 
         # Negative Control entry
         self.create_labeled_entry("Untreated/Baseline condition:", lambda: self.show_info("Baseline condition to"
-                                                                                        " compare against a target "
-                                                                                        "condition for the "
-                                                                                        "comparison of the log-fold "
-                                                                                        "read count change of the "
-                                                                                        "positive vs negative control "
-                                                                                        "genes"),
+                                                                                          " compare against a target "
+                                                                                          "condition for the "
+                                                                                          "comparison of the log-fold "
+                                                                                          "read count change of the "
+                                                                                          "positive vs negative control "
+                                                                                          "genes"),
                                   self.controller.shared_data["distribution_condition2"], 8)
 
         # Add a label or star indicator next to each entry
@@ -117,19 +118,9 @@ class PageThree(BaseFrame):
                                                  sticky="w")
 
     def validate_and_proceed(self):
-        """Validate input fields and start program if valid."""
-        self.invalid_values.clear()
-
-        for label_text, var in self.indicator_labels.items():
-            if label_text != "Result storage location":
-                self.add_trace(self.condition[label_text], var, "non_empty")
-            else:
-                self.add_trace(self.controller.shared_data["working_dir"], var, "folder_location")
-
-        invalid_value_flag = self.check_invalid_values()
-        invalid_folder_location_flag = self.check_invalid_folder_location()
-
-        if not invalid_value_flag and not invalid_folder_location_flag:
+        validator = InputValidatorGUI()
+        if validator.validate_page_three(self.top_entry.get(), self.threshold_fdr_entry.get(),
+                                         self.controller.shared_data["working_dir"].get()):
             self.start_computation()
 
     def check_invalid_folder_location(self):

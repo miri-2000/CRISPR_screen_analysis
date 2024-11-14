@@ -1,5 +1,6 @@
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
+from input_validation_gui import InputValidatorGUI
 
 
 class PageTwo(BaseFrame):
@@ -20,9 +21,9 @@ class PageTwo(BaseFrame):
                                                                                                              column=1,
                                                                                                              pady=10)
         # Button to navigate to the next page
-        ttk.Button(self, text="Next", command=lambda: controller.show_frame(self.get_next_class())).grid(row=9,
-                                                                                                         column=2,
-                                                                                                         pady=10)
+        ttk.Button(self, text="Next", command=self.validate_and_proceed).grid(row=9,
+                                                                              column=2,
+                                                                              pady=10)
 
     def create_widgets(self):
         """Create input fields and buttons for user parameters."""
@@ -48,6 +49,11 @@ class PageTwo(BaseFrame):
                                   lambda: self.show_info("Minimum number of total reads/guide so that "
                                                          "the guide will not be discarded"),
                                   self.threshold_reads_entry, 5, "0")
+
+    def validate_and_proceed(self):
+        validator = InputValidatorGUI()
+        if validator.validate_page_two(self.threshold_reads_entry.get()):
+            self.controller.show_frame(self.get_next_class())
 
     @staticmethod
     def get_previous_class():
