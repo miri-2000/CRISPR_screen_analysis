@@ -123,16 +123,6 @@ class PageThree(BaseFrame):
                                          self.controller.shared_data["working_dir"].get()):
             self.start_computation()
 
-    def check_invalid_folder_location(self):
-        """Check for any invalid folder locations."""
-        invalid_folder_location_labels = [k for k, v in self.invalid_folder_locations.items() if v is True]
-        if invalid_folder_location_labels:
-            messagebox.showwarning("Not a directory",
-                                   f"The following field/s is/are not (a) directory/ies: {', '.join(
-                                       invalid_folder_location_labels)}. Please specify a valid folder location "
-                                   f"to store the results.")
-            return True
-
     def start_computation(self):
         """Start the CRISPR screen analysis program."""
 
