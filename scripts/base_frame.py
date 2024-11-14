@@ -1,7 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
-import os
 import logging as log
 
 log.basicConfig(level=log.DEBUG)
@@ -127,99 +126,6 @@ class BaseFrame(ttk.Frame):
         """
         if entry.get() == "":
             entry.insert(0, default_text)
-
-    def add_trace(self, variable, label, check):
-        """
-        Adds a trace to monitor changes in a variable.
-
-        Args:
-            variable (tk.StringVar()): The variable to monitor.
-            label (tk.Label): The label associated with the variable.
-            check (str): The type of check to perform.
-        """
-        variable.trace_add("write", self.update_indicator(variable, label, check))
-
-    def update_indicator(self, variable, indicator_label, check):
-        """
-        Updates the indicator based on the value of the monitored variable.
-
-        Args:
-            variable (tk.StringVar()): The variable being monitored.
-            indicator_label (tk.Label): The label to update based on validation.
-            check (str): The type of validation to perform.
-        """
-        var_value = variable.get()
-        label_text = [k for k, v in self.indicator_labels.items() if v == indicator_label][0]
-
-        if check == "non_empty":
-            self.check_empty_file(indicator_label, label_text, var_value)
-        elif check == "file_type":
-            self.check_file_type(indicator_label, label_text, var_value)
-        elif check == "folder_location":
-            self.check_folder_location(indicator_label, label_text, var_value)
-
-    def check_empty_file(self, indicator_label, label_text, var_value):
-        """
-        Checks if the provided value is empty and updates the indicator label accordingly.
-
-        Args:
-            indicator_label (tk.Label): The label to update.
-            label_text (str): The text associated with the indicator.
-            var_value (str): The value to check.
-        """
-        if var_value.strip() == "":
-            indicator_label.config(text=" * Invalid")
-            self.invalid_values[label_text] = True
-        else:
-            indicator_label.config(text="")
-            self.invalid_values[label_text] = False
-
-    def check_file_type(self, indicator_label, label_text, path):
-        """
-        Checks if the file type of the provided path is valid.
-
-        Args:
-            indicator_label (tk.Label): The label to update.
-            label_text (str): The text associated with the indicator.
-            path (str): The file path to check.
-        """
-        log_.debug(f"Checking path: {path}")
-        if not os.path.exists(path) or not (path.endswith('.txt') or path.endswith('.csv')):
-            indicator_label.config(text=" * Invalid")
-            log_.debug(f"Path is invalid: {path}")
-            self.invalid_file_types[label_text] = True
-        else:
-            indicator_label.config(text="")
-            log_.debug(f"Path is valid: {path}")
-            self.invalid_file_types[label_text] = False
-
-    def check_folder_location(self, indicator_label, label_text, path):
-        """
-        Checks if the provided path is a valid folder location.
-
-        Args:
-            indicator_label (tk.Label): The label to update.
-            label_text (str): The text associated with the indicator.
-            path (str): The folder path to check.
-        """
-        log_.debug(f"Checking path: {path}")
-        if not os.path.isdir(path):
-            indicator_label.config(text=" * Invalid")
-            log_.debug(f"Path is invalid: {path}")
-            self.invalid_folder_locations[label_text] = True
-        else:
-            indicator_label.config(text="")
-            log_.debug(f"Path is valid: {path}")
-            self.invalid_folder_locations[label_text] = False
-
-    def check_invalid_values(self):
-        """Check for any invalid input values."""
-        invalid_value_labels = [k for k, v in self.invalid_values.items() if v is True]
-        if invalid_value_labels:
-            messagebox.showwarning("Missing information",
-                                   f"The following fields cannot remain empty: {", ".join(invalid_value_labels)}. "
-                                   f"Please specify the parameters.")
-            return True
 
     @staticmethod
     def browse_files(output_variable):

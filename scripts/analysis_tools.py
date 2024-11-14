@@ -2,14 +2,9 @@
 # Last modified 02.10.2024
 # ------------------------------------
 import re
-import os
 import sys
-
 import pandas as pd
 import subprocess
-
-# Initialize the exe_file variable
-exe_files = {}
 
 
 def assign_type(genes, essential_list, non_essential_list):
@@ -46,16 +41,13 @@ def assign_type(genes, essential_list, non_essential_list):
 def run_script(script_file, additional_args=None):
     """
     This function is used to execute additional Python and R files using the module "subprocess".
-    The exe-file is automatically identified so that the given script file can be executed and the
-    error/logging messages are returned.
 
     :param script_file: Filepath of the script to be run
     :param additional_args: Required input-arguments to run the script
-
     :return: Error messages, if the script returns a non-zero exit code
     """
 
-    # Identify where the Rscript.exe file is located on the pc
+    # Specify the command used for subprocess
     if script_file.suffix == ".R":
         command = ["Rscript", script_file]
     else:
@@ -63,7 +55,7 @@ def run_script(script_file, additional_args=None):
     if additional_args is not None:
         command += additional_args
 
-    # Set up a try-except statement to condcatch occurring errors while executing the R file
+    # Set up a try-except statement to catch occurring errors while executing the R file
     try:
         result = subprocess.run(args=command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if not script_file.suffix == ".R":

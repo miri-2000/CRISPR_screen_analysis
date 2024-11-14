@@ -1,5 +1,4 @@
 import sys
-from constants import INPUT_FIELDS
 from input_validation import InputValidator
 
 
