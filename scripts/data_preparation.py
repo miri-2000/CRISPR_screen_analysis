@@ -13,6 +13,7 @@ from pathlib import Path
 import pandas as pd
 import re
 from analysis_tools import assign_type, run_script
+from file_input import read_file
 import logging as log
 
 log.basicConfig(level=log.DEBUG)
@@ -94,10 +95,10 @@ class DataPreparation:
         :return: Tuple with the input files stored as dataframes
         """
 
-        read_data = pd.read_csv(data_file, sep='\t', header=0)
-        essential_genes = pd.read_csv(essential_genes_file)
-        non_essential_genes = pd.read_csv(non_essential_genes_file)
-        library = pd.read_csv(library_file, sep='\t')
+        read_data = read_file(data_file)
+        essential_genes = read_file(essential_genes_file)
+        non_essential_genes = read_file(non_essential_genes_file)
+        library = read_file(library_file)
 
         return read_data, essential_genes, non_essential_genes, library
 
@@ -284,7 +285,7 @@ class DataPreparation:
         log_.debug("Changing names like 'T1_3D_to_2D_Rep3:TGGTCA' to 't1_3d2d_r3'")
         numeric_data = read_data.select_dtypes(include='number')
         annotations = read_data.select_dtypes(exclude='number')
-        
+
         numeric_data.columns = (numeric_data.columns.str.replace(':.*', '', regex=True)
                                 .str.lower()
                                 .str.replace("untreated", "ut")
