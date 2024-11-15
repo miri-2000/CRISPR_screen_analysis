@@ -138,7 +138,7 @@ class PageThree(BaseFrame):
         for key, variable in self.controller.shared_data.items():
             # Get the value of the variable and convert it to string/int
             try:
-                value = int(variable.get())
+                value = float(variable.get())
             except ValueError:
                 value = variable.get()
 
