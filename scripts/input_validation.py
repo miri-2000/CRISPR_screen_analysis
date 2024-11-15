@@ -116,6 +116,9 @@ class InputValidator(ABC):
         fields_to_check = {var_name: var for var_name, var in int_field_vars.items() if var is not None}
 
         for field_name, field_var in fields_to_check.items():
+            if isinstance(field_var, float):
+                self.abort(f"The '{field_name}' needs to be a whole number.")
+                return False
             try:
                 field_var = int(field_var)
             except ValueError:
