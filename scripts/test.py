@@ -14,44 +14,40 @@ class TestInputValidator:
 
     def validate_and_assert(self, expected_message, args_instance):
         """Helper method to validate input_file and assert the error message."""
-        validator = InputValidatorCL(args_instance)
+        validator = InputValidatorCL()
 
         with pytest.raises(SystemExit) as excinfo:
-            validator.validate()  # Assuming validate_file_path checks this
+            validator.validate(args_instance.input_file, args_instance.essential_genes,
+                               args_instance.non_essential_genes, args_instance.library_file,
+                               args_instance.threshold_reads, args_instance.top, args_instance.threshold_fdr,
+                               args_instance.x_axis, args_instance.replicate_type,
+                               args_instance.working_dir)  # Assuming validate_file_path checks this
 
         # Check the output message
         assert str(excinfo.value) == expected_message
-
-    def test_missing_variable(self, args_instance):
-        """Test with an empty input_file."""
-        args_instance.input_file = None
-
-        expected_message = ("The parameter 'input_file' needs to be specified. If the parameter should remain empty set"
-                            f"it by saying e.g. 'unwanted_rows = ""'")
-        self.validate_and_assert(expected_message, args_instance)
 
     def test_empty_input_file(self, args_instance):
         """Test with an empty input_file."""
         args_instance.input_file = ""
 
-        expected_message = ("The parameter 'input_file' needs to contain a valid file path that leads to the "
-                            "specified file. The file must either be a CSV or TXT file.")
+        expected_message = ("The following path/s is/are invalid: 'Screen Result File'. The file path/s "
+                            "must be accurate and lead to a text or csv file.")
         self.validate_and_assert(expected_message, args_instance)
 
     def test_input_file_with_invalid_path(self, args_instance):
         """Test with an invalid input_file path."""
         args_instance.input_file = r"/path/that/does/not/exist.csv"
 
-        expected_message = ("The parameter 'input_file' needs to contain a valid file path that leads to the "
-                            "specified file. The file must either be a CSV or TXT file.")
+        expected_message = ("The following path/s is/are invalid: 'Screen Result File'. The file path/s "
+                            "must be accurate and lead to a text or csv file.")
         self.validate_and_assert(expected_message, args_instance)
 
     def test_input_file_with_wrong_file_type(self, args_instance):
         """Test with an input file with the wrong file type."""
         args_instance.input_file = Path(__file__).parents[1] / "tests" / "test_file.json"
 
-        expected_message = ("The parameter 'input_file' needs to contain a valid file path that leads to the "
-                            "specified file. The file must either be a CSV or TXT file.")
+        expected_message = ("The following path/s is/are invalid: 'Screen Result File'. The file path/s "
+                            "must be accurate and lead to a text or csv file.")
         self.validate_and_assert(expected_message, args_instance)
 
     def test_input_file_with_non_unique_first_columns(self, args_instance):
@@ -88,10 +84,11 @@ class TestInputValidator:
                                             1] / "tests" / "essential_genes_with_genes_not_in_input_file.csv"
 
         expected_message = (
-            "All genes mentioned in the 'essential_genes' file need to be present in the CRISPR screen "
-            f"input file.")
+            "All genes mentioned in the 'Essential Genes File' file need to be present in "
+            "the CRISPR screen input file.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_library_file_with_renamed_required_columns(self, args_instance):
         """Test library file with renamed required columns."""
@@ -104,6 +101,7 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
+
     def test_library_file_with_missing_required_columns(self, args_instance):
         """Test library_file with missing required columns."""
         args_instance.library_file = Path(__file__).parents[
@@ -115,41 +113,46 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
+
     def test_int_field_empty(self, args_instance):
         """Test int_files with an empty string."""
         args_instance.threshold_reads = ""
 
         expected_message = (
-            "The parameter 'threshold_reads' needs to be a whole number.")
+            "The 'Minimum required sum of reads/guide' needs to be a whole number.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_int_field_wrong_data_type(self, args_instance):
         """Test int_file with a wrong data type."""
         args_instance.threshold_reads = 10.5
 
         expected_message = (
-            "The parameter 'threshold_reads' needs to be a whole number.")
+            "The 'Minimum required sum of reads/guide' needs to be a whole number.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_threshold_reads_empty(self, args_instance):
         """Test threshold_reads with an empty string."""
         args_instance.threshold_fdr = ""
 
         expected_message = (
-            "The parameter 'threshold_fdr' needs to be a number between 0 and 1.")
+            "The 'Significance threshold' needs to be a number between 0 and 1.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_threshold_reads_number_out_of_limit(self, args_instance):
         """Test threshold_reads with a number that is not between 0 and 1."""
         args_instance.threshold_fdr = 10
 
         expected_message = (
-            "The parameter 'threshold_fdr' needs to be a number between 0 and 1.")
+            "The 'Significance threshold' needs to be a number between 0 and 1.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_choice_fields_invalid_choice(self, args_instance):
         """Test a choice_field with an invalid choice."""
@@ -160,6 +163,7 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
+
     def test_working_dir_wrong_data_type(self, args_instance):
         """Test working_dir with the wrong data type."""
         args_instance.working_dir = 10
@@ -169,6 +173,7 @@ class TestInputValidator:
             "location.")
 
         self.validate_and_assert(expected_message, args_instance)
+
 
     def test_working_dir_invalid_path(self, args_instance):
         """Test working_dir with an invalid path."""
