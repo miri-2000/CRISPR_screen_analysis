@@ -16,8 +16,8 @@ def read_file(file_path):
 
 
 def get_csv_file_content(file_path):
-    return pd.read_csv(file_path)
+    return pd.read_csv(file_path, header=0)
 
 
 def get_txt_file_content(file_path):
-    return pd.read_csv(file_path, sep='\t')
+    return pd.read_csv(file_path, sep='\t', header=0)
