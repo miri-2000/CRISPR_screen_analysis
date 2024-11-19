@@ -116,11 +116,11 @@ class CRISPRScreenAnalysis:
 
         data_preparation = DataPreparation()
         data_preparation.prepare_data(self.input_file, self.essential_genes, self.non_essential_genes,
-                                           self.library_file, self.unwanted_columns, self.unwanted_rows,
-                                           self.unwanted_row_substrings, self.summary_file, self.threshold_reads,
-                                           self.output_file, self.dataset, self.replicate_type, self.target_samples,
-                                           self.reference_samples, self.distribution_condition1,
-                                           self.distribution_condition2)
+                                      self.library_file, self.unwanted_columns, self.unwanted_rows,
+                                      self.unwanted_row_substrings, self.summary_file, self.threshold_reads,
+                                      self.output_file, self.dataset, self.replicate_type, self.target_samples,
+                                      self.reference_samples, self.distribution_condition1,
+                                      self.distribution_condition2)
 
     def perform_drugz_analysis(self):
         """
