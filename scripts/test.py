@@ -60,6 +60,17 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
+    def test_input_file_with_empty_rows(self, args_instance):
+        """Test input_file with non-unique first columns."""
+        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_empty_rows.txt"
+
+        expected_message = (
+            "The CRISPR screen input file requires the first column with the sgRNA names and the second column "
+            f"with the sgRNA sequences to be unique and not contain missing values (except for nohit row with empty"
+            f" sgRNA sequence.")
+
+        self.validate_and_assert(expected_message, args_instance)
+
     def test_input_file_without_nohit_row(self, args_instance):
         """Test input file without a no-hit row."""
         args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_without_nohit_row.txt"
@@ -89,7 +100,6 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
-
     def test_library_file_with_renamed_required_columns(self, args_instance):
         """Test library file with renamed required columns."""
         args_instance.library_file = Path(__file__).parents[
@@ -100,7 +110,6 @@ class TestInputValidator:
             "'sgRNA Target Sequence' (holding the sgRNA sequence) to be present in the CRISPR screen.")
 
         self.validate_and_assert(expected_message, args_instance)
-
 
     def test_library_file_with_missing_required_columns(self, args_instance):
         """Test library_file with missing required columns."""
@@ -113,7 +122,6 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
-
     def test_int_field_empty(self, args_instance):
         """Test int_files with an empty string."""
         args_instance.threshold_reads = ""
@@ -122,7 +130,6 @@ class TestInputValidator:
             "The 'Minimum required sum of reads/guide' needs to be a whole number.")
 
         self.validate_and_assert(expected_message, args_instance)
-
 
     def test_int_field_wrong_data_type(self, args_instance):
         """Test int_file with a wrong data type."""
@@ -133,7 +140,6 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
-
     def test_threshold_reads_empty(self, args_instance):
         """Test threshold_reads with an empty string."""
         args_instance.threshold_fdr = ""
@@ -142,7 +148,6 @@ class TestInputValidator:
             "The 'Significance threshold' needs to be a number between 0 and 1.")
 
         self.validate_and_assert(expected_message, args_instance)
-
 
     def test_threshold_reads_number_out_of_limit(self, args_instance):
         """Test threshold_reads with a number that is not between 0 and 1."""
@@ -153,7 +158,6 @@ class TestInputValidator:
 
         self.validate_and_assert(expected_message, args_instance)
 
-
     def test_choice_fields_invalid_choice(self, args_instance):
         """Test a choice_field with an invalid choice."""
         args_instance.x_axis = 10
@@ -162,7 +166,6 @@ class TestInputValidator:
             "The x_axis can only either be 'normZ' or 'log2 fold-change'.")
 
         self.validate_and_assert(expected_message, args_instance)
-
 
     def test_working_dir_wrong_data_type(self, args_instance):
         """Test working_dir with the wrong data type."""
@@ -173,7 +176,6 @@ class TestInputValidator:
             "location.")
 
         self.validate_and_assert(expected_message, args_instance)
-
 
     def test_working_dir_invalid_path(self, args_instance):
         """Test working_dir with an invalid path."""
