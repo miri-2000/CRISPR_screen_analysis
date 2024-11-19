@@ -32,4 +32,9 @@ if __name__ == "__main__":
                        args.threshold_reads, args.top, args.threshold_fdr, args.x_axis, args.replicate_type,
                        args.working_dir)
 
-    CRISPRScreenAnalysis(args)
+    analysis = CRISPRScreenAnalysis()
+    analysis.run_analysis(args.working_dir, args.input_file, args.target_samples, args.reference_samples,
+                          args.essential_genes, args.non_essential_genes, args.library_file, args.unwanted_columns,
+                          args.unwanted_rows, args.unwanted_row_substrings, args.threshold_reads, args.x_axis,
+                          args.threshold_fdr, args.top, args.distribution_condition1, args.distribution_condition2,
+                          args.replicate_type)

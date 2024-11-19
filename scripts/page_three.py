@@ -1,6 +1,5 @@
 import tkinter.ttk as ttk
 from base_frame import BaseFrame
-from tkinter import messagebox
 from start_program import CRISPRScreenAnalysis
 from input_validation_gui import InputValidatorGUI
 
@@ -130,7 +129,12 @@ class PageThree(BaseFrame):
         self.save_shared_data()
 
         # Call the CRISPR screen analysis program
-        CRISPRScreenAnalysis(self)
+        analyse = CRISPRScreenAnalysis()
+        analyse.run_analysis(self.working_dir, self.input_file, self.target_samples, self.reference_samples,
+                             self.essential_genes,self.non_essential_genes, self.library_file, self.unwanted_columns,
+                             self.unwanted_rows, self.unwanted_row_substrings,self.threshold_reads, self.x_axis,
+                             self.threshold_fdr, self.top, self.distribution_condition1, self.distribution_condition2,
+                             self.replicate_type)
 
     def save_shared_data(self):
         """Store the user input data for the start of the CRISPR screen analysis program."""

@@ -30,9 +30,10 @@
 # Expected structure of the input data file
 # all annotation columns contain non-numerical data while data columns only have numerical values
 # the first two columns contain the sgRNA names and sequences
-# the file requires a nohit row
-# rows with non-targeting controls are expected to be called "Non-Targeting_Control"
 # the sgRNA name and the sequence column from the table need to be unique
+# the file requires a nohit row
+# rows with non-targeting controls (if any) are expected to be called "Non Targeting Control" (independent on casing
+# and separation symbol (possible symbols: "_", "-", ".")
 # the input file is expected to have guide_mm1_ columns: columns with 1bp mismatch on the
 #       sgRNA (any possible 1bp mismatch, and if only possible from this sgRNA)
 #       -> required for creating counts_summary file
@@ -50,79 +51,67 @@ log_ = log.getLogger(__name__)
 
 
 class CRISPRScreenAnalysis:
-    def __init__(self, args):
-        """
-        Initialize the CRISPRScreenAnalysis with user-specified arguments.
-        Args:
-            args: Argument object containing various parameters like input file, working directory, etc.
-        """
+    def __init__(self):
+        pass
 
-        self.working_dir = args.working_dir
-        self.input_file = args.input_file
-        self.dataset = os.path.basename(self.input_file).split('_')[0]
-        self.output_file = f"{self.dataset}_data_prep.csv"
-        self.summary_file = f"{self.dataset}_counts_summary.csv"
-        self.normalized_file = f"{self.dataset}_norm.csv"
-        self.target_samples = args.target_samples
-        self.reference_samples = args.reference_samples
-        self.output_folder = Path(self.working_dir) / "results"
-        self.essential_genes = args.essential_genes
-        self.non_essential_genes = args.non_essential_genes
-        self.library_file = args.library_file
-        self.unwanted_columns = args.unwanted_columns
-        self.unwanted_rows = args.unwanted_rows
-        self.unwanted_row_substrings = args.unwanted_row_substrings
-        self.threshold_reads = args.threshold_reads
-        self.x_axis = args.x_axis
-        self.threshold_fdr = args.threshold_fdr
-        self.top = args.top
-        self.distribution_condition1 = args.distribution_condition1
-        self.distribution_condition2 = args.distribution_condition2
-        self.replicate_type = args.replicate_type
-
-        self.run_analysis()
-
-    def run_analysis(self):
+    def run_analysis(self, working_dir, input_file, target_samples, reference_samples, essential_genes,
+                     non_essential_genes, library_file, unwanted_columns, unwanted_rows, unwanted_row_substrings,
+                     threshold_reads, x_axis, threshold_fdr, top, distribution_condition1, distribution_condition2,
+                     replicate_type):
         """
         Executes the complete CRISPR screen analysis.
         """
 
-        log_.info(f"Starting analysis for {self.dataset}\n")
+        dataset = os.path.basename(input_file).split('_')[0]
+        log_.info(f"Starting analysis for {dataset}\n")
 
-        self.setup_output_directory()
-        self.prepare_data()
-        self.perform_drugz_analysis()
-        self.calculate_log2fc()
+        self.setup_output_directory(working_dir)
 
-        log_.info(f"Analysis for {self.dataset} complete")
+        self.prepare_data(input_file, essential_genes, non_essential_genes, library_file, unwanted_columns,
+                          unwanted_rows, unwanted_row_substrings, threshold_reads, dataset, replicate_type,
+                          target_samples, reference_samples, distribution_condition1, distribution_condition2)
 
-    def setup_output_directory(self):
+        self.perform_drugz_analysis(target_samples, reference_samples)
+
+        self.calculate_log2fc(dataset, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
+                              threshold_fdr, top)
+
+        log_.info(f"Analysis for {dataset} complete")
+
+    @staticmethod
+    def setup_output_directory(working_dir):
         """
         Sets up the output directory for storing results.
         """
 
         log_.info(f"Setting up the output directory\n")
 
-        os.makedirs(self.output_folder, exist_ok=True)
-        os.chdir(self.output_folder)
-        log_.debug(f"Output directory set to: {self.output_folder}")
+        output_folder = Path(working_dir) / "results"
+        os.makedirs(output_folder, exist_ok=True)
+        os.chdir(output_folder)
+        log_.debug(f"Output directory set to: {output_folder}")
 
-    def prepare_data(self):
+    @staticmethod
+    def prepare_data(input_file, essential_genes, non_essential_genes, library_file, unwanted_columns, unwanted_rows,
+                     unwanted_row_substrings, threshold_reads, dataset, replicate_type, target_samples,
+                     reference_samples, distribution_condition1, distribution_condition2):
         """
         Prepares data for DrugZ analysis.
         """
 
         log_.info(f"Preparing dataset for hit identification")
 
-        data_preparation = DataPreparation()
-        data_preparation.prepare_data(self.input_file, self.essential_genes, self.non_essential_genes,
-                                      self.library_file, self.unwanted_columns, self.unwanted_rows,
-                                      self.unwanted_row_substrings, self.summary_file, self.threshold_reads,
-                                      self.output_file, self.dataset, self.replicate_type, self.target_samples,
-                                      self.reference_samples, self.distribution_condition1,
-                                      self.distribution_condition2)
+        output_file = f"{dataset}_data_prep.csv"
+        summary_file = f"{dataset}_counts_summary.csv"
 
-    def perform_drugz_analysis(self):
+        data_preparation = DataPreparation()
+        data_preparation.prepare_data(input_file, essential_genes, non_essential_genes, library_file, unwanted_columns,
+                                      unwanted_rows, unwanted_row_substrings, summary_file, threshold_reads,
+                                      output_file, dataset, replicate_type, target_samples, reference_samples,
+                                      distribution_condition1, distribution_condition2)
+
+    @staticmethod
+    def perform_drugz_analysis(target_samples, reference_samples):
         """
         Runs DrugZ analysis using the provided script.
         """
@@ -130,20 +119,22 @@ class CRISPRScreenAnalysis:
         log_.info(f"Performing DrugZ analysis")
 
         run_script(Path(__file__).parent / "run_drugz.py",
-                   additional_args=[self.target_samples, self.reference_samples])
+                   additional_args=[target_samples, reference_samples])
 
-    def calculate_log2fc(self):
+    @staticmethod
+    def calculate_log2fc(dataset, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
+                         threshold_fdr, top):
         """
         Calculates log2 fold-changes between the target and reference samples.
         """
 
         log_.info(f"Calculating log2 fold-changes between the target and reference sample")
         # Call result analysis function here
-        result_analysis.create_drugz_log2fc(drugz_input=f"{self.dataset}_drugz-input.txt",
-                                            target_samples=self.target_samples,
-                                            reference_samples=self.reference_samples,
-                                            essential_genes=self.essential_genes,
-                                            non_essential_genes=self.non_essential_genes,
-                                            x_axis=self.x_axis,
-                                            threshold_fdr=self.threshold_fdr,
-                                            top=self.top)
+        result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt",
+                                            target_samples=target_samples,
+                                            reference_samples=reference_samples,
+                                            essential_genes=essential_genes,
+                                            non_essential_genes=non_essential_genes,
+                                            x_axis=x_axis,
+                                            threshold_fdr=threshold_fdr,
+                                            top=top)
