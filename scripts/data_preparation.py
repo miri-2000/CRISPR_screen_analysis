@@ -26,61 +26,51 @@ class DataPreparation:
     good enough to continue with the hit identification.
     """
 
-    def __init__(self, input_file, essential_genes, non_essential_genes, library_file, unwanted_columns, unwanted_rows,
-                 unwanted_row_substrings, summary_file, threshold_reads, output_file, dataset, replicate_type,
-                 target_samples, reference_samples, distribution_condition1, distribution_condition2):
+    def __init__(self):
+        pass
 
-        self.input_file = input_file
-        self.essential_genes = essential_genes
-        self.non_essential_genes = non_essential_genes
-        self.library_file = library_file
-        self.unwanted_columns = unwanted_columns
-        self.unwanted_rows = unwanted_rows
-        self.unwanted_row_substrings = unwanted_row_substrings
-        self.summary_file = summary_file
-        self.threshold_reads = threshold_reads
-        self.output_file = output_file
-        self.dataset = dataset
-        self.replicate_type = replicate_type
-        self.target_samples = target_samples
-        self.reference_samples = reference_samples
-        self.distribution_condition1 = distribution_condition1
-        self.distribution_condition2 = distribution_condition2
-
-    def prepare_data(self):
+    def prepare_data(self, input_file, essential_genes, non_essential_genes, library_file, unwanted_columns,
+                     unwanted_rows, unwanted_row_substrings, summary_file, threshold_reads, output_file, dataset,
+                     replicate_type, target_samples, reference_samples, distribution_condition1,
+                     distribution_condition2):
 
         log_.debug("Initiating data preparation")
 
         # Get the data
-        reads, essential_genes, non_essential_genes, library = self.get_data()
+        reads, essential_genes, non_essential_genes, library = self.get_data(input_file, essential_genes,
+                                                                             non_essential_genes, library_file,
+                                                                             unwanted_columns, unwanted_rows,
+                                                                             unwanted_row_substrings)
 
         # Pre-process the data
-        reads, conditions = self.preprocess_data(reads)
+        reads, conditions = self.preprocess_data(reads, summary_file, threshold_reads)
 
         # Compare the cleaned data file with the given library file
         self.compare_with_library(reads, library, essential_genes, non_essential_genes)
 
         # Store the cleaned data in a csv file
-        log_.debug(f"\nStoring the resulting dataframe in {self.output_file}")
-        reads.to_csv(self.output_file, sep=';', index=False)
+        log_.debug(f"\nStoring the resulting dataframe in {output_file}")
+        reads.to_csv(output_file, sep=';', index=False)
 
         # Normalize data and creating quality control plots
-        self.normalize_data(conditions)
+        self.normalize_data(conditions, output_file, dataset, replicate_type,
+                            target_samples, reference_samples, distribution_condition1,
+                            distribution_condition2)
 
         log_.debug("Finished Data preparation")
 
-    def get_data(self):
-        # Read the provided input files
-        reads, essential_genes, non_essential_genes, library = self.read_files(self.input_file, self.essential_genes,
-                                                                               self.non_essential_genes,
-                                                                               self.library_file)
+    def get_data(self, input_file, essential_genes, non_essential_genes, library_file, unwanted_columns,
+                 unwanted_rows, unwanted_row_substrings):
 
-        # Check the input file for its correctness
-        self.check_input(reads)
+        # Read the provided input files
+        reads, essential_genes, non_essential_genes, library = self.read_files(input_file, essential_genes,
+                                                                               non_essential_genes,
+                                                                               library_file)
 
         # Clean up the input file, so it only contains required columns and rows
-        reads = self.clean_up(reads, essential_genes, non_essential_genes, self.unwanted_columns, self.unwanted_rows,
-                              self.unwanted_row_substrings)
+        reads = self.clean_up(reads, essential_genes, non_essential_genes, unwanted_columns, unwanted_rows,
+                              unwanted_row_substrings)
+
         return reads, essential_genes, non_essential_genes, library
 
     @staticmethod
@@ -101,41 +91,6 @@ class DataPreparation:
         library = read_file(library_file)
 
         return read_data, essential_genes, non_essential_genes, library
-
-    @staticmethod
-    def check_input(read_data):
-        """
-        Check the input data for errors that prevent the data preparation from working.
-
-        :param read_data: Dataset containing read counts for each gRNA
-        :return: Error message in case the input is not correct
-        """
-
-        # Check if either of the first two columns contain only strings and do not have empty rows (except for the
-        # nohit-row)
-        for col in range(2):
-            nan_count = read_data.iloc[:, col].isna().sum()
-            if nan_count > 1:
-                raise ValueError(
-                    f"Column {col + 1} has multiple empty rows. Please make sure that every row has a value.")
-
-            is_all_strings = read_data.iloc[:, col].apply(lambda x: isinstance(x, str) or pd.isna(x)).all()
-
-            if not is_all_strings:
-                raise ValueError(f"Column {col + 1} should contain only strings")
-
-        # Control if the columns with the sgRNA names and sequences from the table are both unique
-        log_.debug("Checking the uniqueness of the sgRNA names and sequences")
-        if len(read_data) != len(set(read_data.iloc[:, 0])) or len(read_data) != len(set(read_data.iloc[:, 1])):
-            raise ValueError(
-                "Both columns with sgRNA names and sequences need to be unique. If this is true, please check whether "
-                "these two columns are the first two columns of the input data file (as expected).")
-
-        # Check if there is a nohit_row
-        log_.debug("Identifying the nohit_row")
-        nohit_row = read_data[read_data.iloc[:, 0] == 'nohit_row']
-        if len(nohit_row) == 0:
-            raise ValueError("There is no nohit_row. Please check your dataset for a row that is called 'nohit_row'.")
 
     def clean_up(self, read_data, essential_genes, non_essential_genes, unwanted_columns=None, unwanted_rows=None,
                  unwanted_row_substrings=None):
@@ -256,7 +211,7 @@ class DataPreparation:
 
         return read_data
 
-    def preprocess_data(self, reads):
+    def preprocess_data(self, reads, summary_file, threshold_reads):
         # Store all column names representing the conditions and all columns that have "guide_mm1" in their name
         conditions, data_columns = self.get_conditions(reads)
 
@@ -264,17 +219,18 @@ class DataPreparation:
         reads, nohit_guide = self.remove_nohit(reads, conditions)
 
         # Create a summary file
-        self.create_summary(reads, conditions, nohit_guide, self.summary_file)
+        self.create_summary(reads, conditions, nohit_guide, summary_file)
 
         # Remove columns containing "guide_mm1"
         reads = self.remove_guide_mm1_columns(reads)
 
         # Remove the rows that have a total sum of counts below a certain threshold
-        reads = self.remove_invalid_guides(reads, self.threshold_reads)
+        reads = self.remove_invalid_guides(reads, threshold_reads)
 
         return reads, conditions
 
-    def standardize_column_names(self, read_data):
+    @staticmethod
+    def standardize_column_names(read_data):
         """
         Convert column names to a common naming convention
 
@@ -308,7 +264,8 @@ class DataPreparation:
 
         return read_data
 
-    def create_gene_column(self, read_data):
+    @staticmethod
+    def create_gene_column(read_data):
         """
         Create a gene column from read_data
 
@@ -322,7 +279,8 @@ class DataPreparation:
 
         return read_data
 
-    def assign_gene_type(self, read_data, essential_genes, non_essential_genes):
+    @staticmethod
+    def assign_gene_type(read_data, essential_genes, non_essential_genes):
         """
         Create a column with the assigned data type for each gene
 
@@ -349,7 +307,8 @@ class DataPreparation:
 
         return read_data
 
-    def get_conditions(self, read_data):
+    @staticmethod
+    def get_conditions(read_data):
         """
         Select columns that are used for creating the counts_summary file
         :param read_data: Dataset containing read counts for each gRNA
@@ -364,7 +323,8 @@ class DataPreparation:
 
         return conditions, data_columns
 
-    def remove_nohit(self, read_data, conditions):
+    @staticmethod
+    def remove_nohit(read_data, conditions):
         """
         Remove the nohit row from the dataset
 
@@ -379,7 +339,8 @@ class DataPreparation:
 
         return read_data, nohit_guide
 
-    def remove_guide_mm1_columns(self, read_data):
+    @staticmethod
+    def remove_guide_mm1_columns(read_data):
         """
         Remove the guide_mm1 columns from the dataset
 
@@ -391,7 +352,8 @@ class DataPreparation:
 
         return read_data
 
-    def remove_invalid_guides(self, read_data, threshold_reads):
+    @staticmethod
+    def remove_invalid_guides(read_data, threshold_reads):
         """
         Remove invalid guides from the dataset
 
@@ -419,7 +381,8 @@ class DataPreparation:
 
         return read_data
 
-    def create_summary(self, read_data, conditions, nohit_guide, summary_file):
+    @staticmethod
+    def create_summary(read_data, conditions, nohit_guide, summary_file):
         """
         This function creates a summary file that show the sums of reads per condition.
         The program makes three different classes (condition, condition with 1 mismatch and
@@ -465,7 +428,8 @@ class DataPreparation:
         log_.debug(f"Storing the final table in {summary_file}")
         sum_df.to_csv(summary_file, index=True, sep=";")
 
-    def compare_with_library(self, data, library, essential_genes, non_essential_genes):
+    @staticmethod
+    def compare_with_library(data, library, essential_genes, non_essential_genes):
         """
         This function compares the library file with the read counts file and gives out
         a summary that states how many guides had reads from all the guides that are
@@ -499,12 +463,15 @@ class DataPreparation:
                 f"Number of type {gene_type} sgRNAs in library: {len(lib_copy[lib_copy['type'] == gene_type])}, "
                 f"in dataset: {len(data[data['type'] == gene_type])}, in percentage: {ratio} %")
 
-    def normalize_data(self, conditions):
+    @staticmethod
+    def normalize_data(conditions, output_file, dataset, replicate_type,
+                       target_samples, reference_samples, distribution_condition1,
+                       distribution_condition2):
         # Remove the replicate notation ("_r1") from the condition names
         conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
 
         log_.debug("Normalizing data and creating quality control plots\n")
         run_script(Path(__file__).parent / "R_analysis_1.R",
-                   additional_args=[self.output_file, self.dataset, ",".join(conditions_new), self.replicate_type,
-                                    self.target_samples, self.reference_samples, self.distribution_condition1,
-                                    self.distribution_condition2])
+                   additional_args=[output_file, dataset, ",".join(conditions_new), replicate_type,
+                                    target_samples, reference_samples, distribution_condition1,
+                                    distribution_condition2])
