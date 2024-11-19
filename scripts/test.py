@@ -12,7 +12,8 @@ def args_instance():
 
 class TestInputValidator:
 
-    def validate_and_assert(self, expected_message, args_instance):
+    @staticmethod
+    def validate_and_assert(expected_message, args_instance):
         """Helper method to validate input_file and assert the error message."""
         validator = InputValidatorCL()
 
@@ -55,8 +56,9 @@ class TestInputValidator:
         args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_duplicated_rows.txt"
 
         expected_message = (
-            "The CRISPR screen input file requires the first column with the sgRNA names and the second column "
-            f"with the sgRNA sequences to be unique.")
+            "The CRISPR screen input file requires the first column with the sgRNA names "
+            "and the second column with the sgRNA sequences to be unique and not contain "
+            "missing values (except for nohit row with empty sgRNA sequence.")
 
         self.validate_and_assert(expected_message, args_instance)
 
@@ -68,6 +70,16 @@ class TestInputValidator:
             "The CRISPR screen input file requires the first column with the sgRNA names and the second column "
             f"with the sgRNA sequences to be unique and not contain missing values (except for nohit row with empty"
             f" sgRNA sequence.")
+
+        self.validate_and_assert(expected_message, args_instance)
+
+    def test_input_file_with_invalid_dtype_rows(self, args_instance):
+        """Test input_file with non-unique first columns."""
+        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_invalid_dtype_rows.txt"
+
+        expected_message = (
+            "The sgRNA name and sequence columns (column 1 and 2) in the CRISPR screen input file should "
+            "only contain strings.")
 
         self.validate_and_assert(expected_message, args_instance)
 

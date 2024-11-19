@@ -49,7 +49,11 @@ class InputValidator(ABC):
                 len(input_data.iloc[:, 1].unique()) != len(input_data.iloc[:, 1])):
             self.abort(
                 f"The CRISPR screen input file requires the first column with the sgRNA names and the second column "
-                f"with the sgRNA sequences to be unique.")
+                f"with the sgRNA sequences to be unique and not contain missing values (except for nohit row with empty"
+                f" sgRNA sequence.")
+            return False
+
+        if not self.check_invalid_dtypes(input_data):
             return False
 
         if not (input_data.iloc[:, 0] == "nohit_row").any():
@@ -61,6 +65,28 @@ class InputValidator(ABC):
 
         if not input_data.columns.str.contains("guide_mm1").any():
             self.abort("The CRISPR screen input file requires a guide_mm1_ column.")
+            return False
+
+        return True
+
+    def check_invalid_dtypes(self, input_data):
+        # Check if either of the first two columns contain only strings
+        check_strings = dict()
+        for col in range(2):
+            check_strings[col] = input_data.iloc[:, col].apply(lambda x: isinstance(x, str) or pd.isna(x)).all()
+
+        if not check_strings[0] and not check_strings[1]:
+            self.abort(
+                "The sgRNA name and sequence columns (column 1 and 2) in the CRISPR screen input file should "
+                "only contain strings.")
+            return False
+        elif not check_strings[0]:
+            self.abort(
+                "The sgRNA name column (column 1) in the CRISPR screen input file should only contain strings.")
+            return False
+        elif not check_strings[1]:
+            self.abort(
+                "The sgRNA sequence column (column 2) in the CRISPR screen input file should only contain strings.")
             return False
 
         return True
