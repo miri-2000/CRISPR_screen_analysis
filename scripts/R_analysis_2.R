@@ -121,7 +121,7 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
     }
     
     
-    if ("log2fc" %in% x.axis){
+    if ("log2 fold-change" %in% x.axis){
       comparison.log2fc <- paste(comparison,"Gene.log2fc",sep=".")
       columns=c(columns,comparison.log2fc)
     }
