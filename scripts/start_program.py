@@ -43,7 +43,7 @@ import os
 from pathlib import Path
 import logging as log
 from data_preparation import DataPreparation
-import result_analysis
+from result_analysis import ResultAnalysis
 from analysis_tools import run_script
 
 log.basicConfig(level=log.INFO)
@@ -130,6 +130,7 @@ class CRISPRScreenAnalysis:
 
         log_.info(f"Calculating log2 fold-changes between the target and reference sample")
         # Call result analysis function here
+        result_analysis = ResultAnalysis()
         result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt",
                                             target_samples=target_samples,
                                             reference_samples=reference_samples,
