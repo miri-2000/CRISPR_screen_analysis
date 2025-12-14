@@ -1,7 +1,9 @@
 # analysis_tools: Helper script required for running R scripts and other python files.
-# Last modified 02.10.2024
+# Last modified 14.12.2025
 # ------------------------------------
 import re
+from shutil import which
+from pathlib import Path
 import sys
 import pandas as pd
 import subprocess
@@ -37,31 +39,56 @@ def assign_type(genes, essential_list, non_essential_list):
 
     return types
 
+INTERPRETERS = {
+    ".R": lambda: resolve_executable("Rscript"),
+    ".py": lambda: sys.executable,
+}
 
-def run_script(script_file, additional_args=None):
+def resolve_executable(name: str) -> str:
     """
-    This function is used to execute additional Python and R files using the module "subprocess".
+    Resolve an executable using the system PATH.
+    """
+    exe = which(name)
+    if exe is None:
+        raise FileNotFoundError(f"Required executable '{name}' not found in PATH")
+    return exe
 
-    :param script_file: Filepath of the script to be run
-    :param additional_args: Required input-arguments to run the script
-    :return: Error messages, if the script returns a non-zero exit code
+def run_script(script_file: Path, additional_args=None):
+    """
+    Execute a script using the appropriate interpreter.
     """
 
-    # Specify the command used for subprocess
-    if script_file.suffix == ".R":
-        command = ["Rscript", script_file]
-    else:
-        command = [sys.executable, script_file]
-    if additional_args is not None:
-        command += additional_args
+    script_file = Path(script_file)
+    additional_args = additional_args or []
 
-    # Set up a try-except statement to catch occurring errors while executing the R file
     try:
-        result = subprocess.run(args=command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if not script_file.suffix == ".R":
+        interpreter = INTERPRETERS[script_file.suffix]()
+    except KeyError:
+        raise ValueError(f"Unsupported script type: {script_file.suffix}")
+
+    command = [
+        interpreter,
+        str(script_file),
+        *map(str, additional_args)
+    ]
+
+    try:
+        result = subprocess.run(
+            command,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        if result.stderr:
             print(result.stderr)
+
+        return result.stdout
+
     except subprocess.CalledProcessError as e:
-        print("Command returned non-zero exit status:", e.returncode)
-        print("Standard Output:", e.stdout)
-        print("Standard Error:", e.stderr)
-        raise SystemExit()
+        raise RuntimeError(
+            f"Command failed with exit code {e.returncode}\n"
+            f"STDOUT:\n{e.stdout}\n"
+            f"STDERR:\n{e.stderr}"
+        ) from e
+
