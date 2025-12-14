@@ -727,7 +727,7 @@ controlDistrs <- function(
       height <- nRow * widthSizeFactor * 50
     }
 
-    oFileName1 <- paste(oFileName, plotformat, sep = ".")
+    oFileName1 <- paste(oFileName, plotformat, sep = "..")
 
     # plot <- plot + theme(plot.title = element_text(size = 10))
     plot <- ggarrange(
@@ -1102,7 +1102,7 @@ correlationPlots <- function(
     dev.off()
   }
 
-  outputFile <- gsub(paste(".", plotformat, "$", sep = ""), "", outputFile)
+  outputFile <- gsub(paste("..", plotformat, "$", sep = ""), "", outputFile)
   write.table(
     corrAll,
     file = paste(outputFile, ".csv", sep = ""),

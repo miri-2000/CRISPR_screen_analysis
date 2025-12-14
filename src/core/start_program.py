@@ -4,7 +4,7 @@
 # Last modified 02.10.2024
 # Free to modify and redistribute
 # ---------------------------------------------------------------------------------------------------
-# This file provides the full control over the entire analysis. Any inputs that need to be defined are stated here.
+# This file provides the full control over the entire core. Any inputs that need to be defined are stated here.
 # For details on how to adapt this file for new CRISPR screen analyses, please refer to the documentation.
 # ---------------------------------------------------------------------------------------------------
 # Parameters
@@ -42,9 +42,9 @@
 import os
 from pathlib import Path
 import logging as log
-from data_preparation import DataPreparation
-from result_analysis import ResultAnalysis
-from analysis_tools import run_script
+from src.core.data_preparation import DataPreparation
+from src.core.result_analysis import ResultAnalysis
+from src.core.analysis_tools import run_script
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)
@@ -59,11 +59,11 @@ class CRISPRScreenAnalysis:
                      threshold_reads, x_axis, threshold_fdr, top, distribution_condition1, distribution_condition2,
                      replicate_type):
         """
-        Executes the complete CRISPR screen analysis.
+        Executes the complete CRISPR screen core.
         """
 
         dataset = os.path.basename(input_file).split('_')[0]
-        log_.info(f"Starting analysis for {dataset}\n")
+        log_.info(f"Starting core for {dataset}\n")
 
         self.setup_output_directory(working_dir)
 
@@ -71,12 +71,17 @@ class CRISPRScreenAnalysis:
                           unwanted_rows, unwanted_row_substrings, threshold_reads, dataset, replicate_type,
                           target_samples, reference_samples, distribution_condition1, distribution_condition2)
 
-        self.perform_drugz_analysis(target_samples, reference_samples)
+        self.perform_drugz_analysis(working_dir, target_samples, reference_samples)
 
         self.calculate_log2fc(dataset, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
                               threshold_fdr, top)
 
         log_.info(f"Analysis for {dataset} complete")
+
+    @staticmethod
+    def results_folder(working_dir):
+        """Return the path to the results folder for a given working directory."""
+        return Path(working_dir) / "results"
 
     @staticmethod
     def setup_output_directory(working_dir):
@@ -86,7 +91,7 @@ class CRISPRScreenAnalysis:
 
         log_.info(f"Setting up the output directory\n")
 
-        output_folder = Path(working_dir) / "results"
+        output_folder = CRISPRScreenAnalysis.results_folder(working_dir)
         os.makedirs(output_folder, exist_ok=True)
         os.chdir(output_folder)
         log_.debug(f"Output directory set to: {output_folder}")
@@ -96,7 +101,7 @@ class CRISPRScreenAnalysis:
                      unwanted_row_substrings, threshold_reads, dataset, replicate_type, target_samples,
                      reference_samples, distribution_condition1, distribution_condition2):
         """
-        Prepares data for DrugZ analysis.
+        Prepares data for DrugZ core.
         """
 
         log_.info(f"Preparing dataset for hit identification")
@@ -111,15 +116,17 @@ class CRISPRScreenAnalysis:
                                       distribution_condition1, distribution_condition2)
 
     @staticmethod
-    def perform_drugz_analysis(target_samples, reference_samples):
+    def perform_drugz_analysis(working_dir, target_samples, reference_samples):
         """
-        Runs DrugZ analysis using the provided script.
+        Runs DrugZ core using the provided script.
         """
 
-        log_.info(f"Performing DrugZ analysis")
+        log_.info(f"Performing DrugZ core")
+
+        input_folder = CRISPRScreenAnalysis.results_folder(working_dir)
 
         run_script(Path(__file__).parent / "run_drugz.py",
-                   additional_args=[target_samples, reference_samples])
+                   additional_args=[input_folder,target_samples, reference_samples])
 
     @staticmethod
     def calculate_log2fc(dataset, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
@@ -129,7 +136,8 @@ class CRISPRScreenAnalysis:
         """
 
         log_.info(f"Calculating log2 fold-changes between the target and reference sample")
-        # Call result analysis function here
+
+        # Call result core function here
         result_analysis = ResultAnalysis()
         result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt",
                                             target_samples=target_samples,

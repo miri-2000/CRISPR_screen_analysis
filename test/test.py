@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
-from file_based_launch import Args
-from input_validation_cl import InputValidatorCL
+from src.file_based_launch import Args
+from src.core.input_validation_cl import InputValidatorCL
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ class TestInputValidator:
 
     def test_input_file_with_wrong_file_type(self, args_instance):
         """Test with an input file with the wrong file type."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "test_file.json"
+        args_instance.input_file = Path(__file__).parents[0] / "files"/ "test_file.json"
 
         expected_message = ("The following path/s is/are invalid: 'Screen Result File'. The file path/s "
                             "must be accurate and lead to a text or csv file.")
@@ -53,7 +53,8 @@ class TestInputValidator:
 
     def test_input_file_with_non_unique_first_columns(self, args_instance):
         """Test input_file with non-unique first columns."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_duplicated_rows.txt"
+        print(Path(__file__).parents[1])
+        args_instance.input_file = Path(__file__).parents[0] / "files" / "read_count_file_with_duplicated_rows.txt"
 
         expected_message = (
             "The CRISPR screen input file requires the first column with the sgRNA names "
@@ -64,7 +65,7 @@ class TestInputValidator:
 
     def test_input_file_with_empty_rows(self, args_instance):
         """Test input_file with non-unique first columns."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_empty_rows.txt"
+        args_instance.input_file = Path(__file__).parents[0] / "files"/ "read_count_file_with_empty_rows.txt"
 
         expected_message = (
             "The CRISPR screen input file requires the first column with the sgRNA names and the second column "
@@ -75,7 +76,7 @@ class TestInputValidator:
 
     def test_input_file_with_invalid_dtype_rows(self, args_instance):
         """Test input_file with non-unique first columns."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_with_invalid_dtype_rows.txt"
+        args_instance.input_file = Path(__file__).parents[0] / "files"/ "read_count_file_with_invalid_dtype_rows.txt"
 
         expected_message = (
             "The sgRNA name and sequence columns (column 1 and 2) in the CRISPR screen input file should "
@@ -85,7 +86,7 @@ class TestInputValidator:
 
     def test_input_file_without_nohit_row(self, args_instance):
         """Test input file without a no-hit row."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_without_nohit_row.txt"
+        args_instance.input_file = Path(__file__).parents[0] / "files"/ "read_count_file_without_nohit_row.txt"
 
         expected_message = (
             "The CRISPR screen input file requires a no-hit row.")
@@ -94,7 +95,7 @@ class TestInputValidator:
 
     def test_input_file_without_guide_mm1_column(self, args_instance):
         """Test input_file without a guide mm1 column."""
-        args_instance.input_file = Path(__file__).parents[1] / "tests" / "read_count_file_without_guide_mm1_columns.txt"
+        args_instance.input_file = Path(__file__).parents[0] / "files"/ "read_count_file_without_guide_mm1_columns.txt"
 
         expected_message = (
             "The CRISPR screen input file requires a guide_mm1_ column.")
@@ -104,7 +105,7 @@ class TestInputValidator:
     def test_essential_genes_not_in_input_file(self, args_instance):
         """Test essential_genes file with genes that are not in input file."""
         args_instance.essential_genes = Path(__file__).parents[
-                                            1] / "tests" / "essential_genes_with_genes_not_in_input_file.csv"
+                                            0] / "files" / "essential_genes_with_genes_not_in_input_file.csv"
 
         expected_message = (
             "All genes mentioned in the 'Essential Genes File' file need to be present in "
@@ -115,7 +116,7 @@ class TestInputValidator:
     def test_library_file_with_renamed_required_columns(self, args_instance):
         """Test library file with renamed required columns."""
         args_instance.library_file = Path(__file__).parents[
-                                         1] / "tests" / "library_file_with_renamed_required_columns.txt"
+                                         0] / "files" / "library_file_with_renamed_required_columns.txt"
 
         expected_message = (
             "The library file requires the column 'Target Gene Symbol' (holding the gene names) and"
@@ -126,7 +127,7 @@ class TestInputValidator:
     def test_library_file_with_missing_required_columns(self, args_instance):
         """Test library_file with missing required columns."""
         args_instance.library_file = Path(__file__).parents[
-                                         1] / "tests" / "library_file_with_missing_required_columns.txt"
+                                         0] / "files" / "library_file_with_missing_required_columns.txt"
 
         expected_message = (
             "The library file requires the column 'Target Gene Symbol' (holding the gene names) and"

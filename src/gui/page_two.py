@@ -1,10 +1,10 @@
 import tkinter.ttk as ttk
-from base_frame import BaseFrame
-from input_validation_gui import InputValidatorGUI
+from src.gui.base_frame import BaseFrame
+from src.core.input_validation_gui import InputValidatorGUI
 
 
 class PageTwo(BaseFrame):
-    """Page two of the CRISPR screen analysis tool."""
+    """Page two of the CRISPR screen core tool."""
 
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -64,7 +64,7 @@ class PageTwo(BaseFrame):
 
     @staticmethod
     def get_next_class():
-        from page_three import PageThree
+        from src.gui.page_three import PageThree
 
         # Return the next class
         return PageThree

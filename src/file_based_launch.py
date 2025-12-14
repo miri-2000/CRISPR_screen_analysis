@@ -1,6 +1,6 @@
-from start_program import CRISPRScreenAnalysis
+from src.core.start_program import CRISPRScreenAnalysis
 from pathlib import Path
-from input_validation_cl import InputValidatorCL
+from src.core.input_validation_cl import InputValidatorCL
 
 
 class Args:
@@ -21,7 +21,7 @@ class Args:
         self.distribution_condition1 = "t7"
         self.distribution_condition2 = "t0"
         self.replicate_type = "biological"  # or "technical"
-        self.working_dir = Path(__file__).parents[1] / "example"
+        self.working_dir = Path(__file__).parents[1] / "temp_out"
 
 
 if __name__ == "__main__":

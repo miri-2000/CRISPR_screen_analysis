@@ -1,21 +1,21 @@
 # run_drugz: This script is used to execute DrugZ and allows the
 # modification of additional parameters for running DrugZ if wanted
 # by the user.
-# Last modified 02.10.2024
+# Last modified 14.12.2025
 # ------------------------------------
-import drugZ
+from src.core import drugZ
 import os
-import fnmatch
 import sys
+from pathlib import Path
 
 
 class Args:
     def __init__(self):
-        self.infile = os.path.abspath(fnmatch.filter(os.listdir('.'), '*drugz-input.txt')[0])
-        self.drugz_output_file = "./drugz/drugz_"
-        self.gRNA_outfile = "./drugz/gRNA_"
-        self.target_samples = sys.argv[1]
-        self.reference_samples = sys.argv[2]
+        self.infile = list(Path(sys.argv[1]).glob("*_drugz-input.txt"))
+        self.drugz_output = "./drugz/drugz_"
+        self.gRNA_output = "./drugz/gRNA_"
+        self.target_samples = sys.argv[2]
+        self.reference_samples = sys.argv[3]
         self.remove_genes = None
         self.unpaired = True
         self.replicates = True
@@ -35,6 +35,6 @@ if __name__ == '__main__':
     for target_sample, reference_sample in zip(target_samples_list, reference_samples_list):
         args.target_sample = target_sample
         args.reference_sample = reference_sample
-        args.drugz_output_file = args.drugz_output_file + target_sample + "-" + reference_sample + ".txt"
-        args.gRNA_outfile = args.gRNA_outfile + target_sample + "-" + reference_sample + ".txt"
+        args.drugz_output_file = args.drugz_output + target_sample + "-" + reference_sample + ".txt"
+        args.gRNA_output_file = args.gRNA_output + target_sample + "-" + reference_sample + ".txt"
         drugZ.drugz_analysis(args)

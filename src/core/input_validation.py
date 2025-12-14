@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from abc import ABC, abstractmethod
-from file_input import read_file
+from src.core.file_input import read_file
 
 
 class InputValidator(ABC):

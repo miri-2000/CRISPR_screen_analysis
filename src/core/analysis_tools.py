@@ -1,4 +1,4 @@
-# analysis_tools: Helper script required for running R scripts and other python files.
+# analysis_tools: Helper script required for running R src and other python files.
 # Last modified 14.12.2025
 # ------------------------------------
 import re

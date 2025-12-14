@@ -12,8 +12,8 @@
 from pathlib import Path
 import pandas as pd
 import re
-from analysis_tools import assign_type, run_script
-from file_input import read_file
+from src.core.analysis_tools import assign_type, run_script
+from src.core.file_input import read_file
 import logging as log
 
 log.basicConfig(level=log.DEBUG)

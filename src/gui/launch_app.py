@@ -1,7 +1,7 @@
 import tkinter as tk
-from page_one import StartPage
-from page_two import PageTwo
-from page_three import PageThree
+from src.gui.page_one import StartPage
+from src.gui.page_two import PageTwo
+from src.gui.page_three import PageThree
 
 
 class CRISPRApp(tk.Tk):

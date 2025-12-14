@@ -95,7 +95,7 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
     target_name <- sub("_[tr|ut]+$", "",target_sample)
     reference_name <- sub("_[tr|ut]+$", "",reference_sample)
     # store the column name of interest
-    comparison <- paste(target_sample,reference_sample,sep=".")
+    comparison <- paste(target_sample,reference_sample,sep= ".")
     plots <- list()
     pIdx <- 0
     
@@ -122,31 +122,33 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
     
     
     if ("log2 fold-change" %in% x.axis){
-      comparison.log2fc <- paste(comparison,"Gene.log2fc",sep=".")
+      comparison.log2fc <- paste(comparison,"Gene.log2fc",sep= ".")
       columns=c(columns,comparison.log2fc)
     }
     if ("normZ" %in% x.axis){
-      normZCol <- paste(comparison,"normZ",sep=".")
+      normZCol <- paste(comparison,"normZ",sep= ".")
       columns=c(columns,normZCol)
     }
     
     for (selection in selections) {
       columns_per_selection=columns
+      print(columns_per_selection)
+      print(setdiff(columns_per_selection, colnames(data)))
       threshold_fdr <- 0.25
       
       if (selection=="pos") {
         thLfc <- 1
         thDiff <- 1
         
-        fdrCol <- paste(comparison,"fdr_supp",sep=".")
-        rankCol <- paste(comparison,"rank_supp",sep=".")
+        fdrCol <- paste(comparison,"fdr_supp",sep= ".")
+        rankCol <- paste(comparison,"rank_supp",sep= ".")
         selection_name="pos. sel."
       }else{
         thLfc <- -1
         thDiff <- -1
         
-        fdrCol <- paste(comparison,"fdr_synth",sep=".")
-        rankCol <- paste(comparison,"rank_synth",sep=".")
+        fdrCol <- paste(comparison,"fdr_synth",sep= ".")
+        rankCol <- paste(comparison,"rank_synth",sep= ".")
         selection_name="neg. sel."
       }
       columns_per_selection=c(columns_per_selection,fdrCol,rankCol)
@@ -279,6 +281,7 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
 args <- commandArgs(trailingOnly = TRUE)
 
 data <- read.csv(as.character(args[1]),stringsAsFactors = F,sep=";")
+print(colnames(data))
 
 create_plots(data=data,target_samples=strsplit(args[2], ',')[[1]],reference_samples=strsplit(args[3], ',')[[1]],x.axis=as.character(args[4]),threshold_fdr=as.numeric(args[5]),top=as.numeric(args[6]))
   

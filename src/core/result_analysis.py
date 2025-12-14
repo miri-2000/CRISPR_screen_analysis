@@ -3,10 +3,11 @@
 # Last modified 02.10.2024
 # ------------------------------------
 import logging as log
+import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from analysis_tools import run_script, assign_type
+from src.core.analysis_tools import run_script, assign_type
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)
@@ -22,7 +23,7 @@ class ResultAnalysis:
         """
         Calculate the drugz log2 fold-changes between the target samples and reference samples
 
-        :param drugz_input: Input file used for running the DrugZ analysis
+        :param drugz_input: Input file used for running the DrugZ core
         :param target_samples: Names of target samples
         :param reference_samples: Names of reference/control samples
         :param essential_genes: Csv file that contains list of essential genes to mark them in dataset (type='p')
@@ -101,7 +102,7 @@ class ResultAnalysis:
 
         # Start the execution of R_analysis_2
         log_.info("Creating significance plots\n")
-        log2fc_all = r".\drugz_log2fcs_all.csv"
+        log2fc_all = os.path.abspath("drugz_log2fcs_all.csv")
         run_script(Path(__file__).parents[0] / "R_analysis_2.R",
                    additional_args=[log2fc_all, ",".join(target_samples), ",".join(reference_samples), x_axis,
                                     str(threshold_fdr),

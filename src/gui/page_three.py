@@ -1,11 +1,11 @@
 import tkinter.ttk as ttk
-from base_frame import BaseFrame
-from start_program import CRISPRScreenAnalysis
-from input_validation_gui import InputValidatorGUI
+from src.gui.base_frame import BaseFrame
+from src.core.start_program import CRISPRScreenAnalysis
+from src.core.input_validation_gui import InputValidatorGUI
 
 
 class PageThree(BaseFrame):
-    """Page three of the CRISPR screen analysis tool."""
+    """Page three of the CRISPR screen core tool."""
 
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -123,12 +123,12 @@ class PageThree(BaseFrame):
             self.start_computation()
 
     def start_computation(self):
-        """Start the CRISPR screen analysis program."""
+        """Start the CRISPR screen core program."""
 
         # Prepare user input
         self.save_shared_data()
 
-        # Call the CRISPR screen analysis program
+        # Call the CRISPR screen core program
         analyse = CRISPRScreenAnalysis()
         analyse.run_analysis(self.working_dir, self.input_file, self.target_samples, self.reference_samples,
                              self.essential_genes,self.non_essential_genes, self.library_file, self.unwanted_columns,
@@ -137,7 +137,7 @@ class PageThree(BaseFrame):
                              self.replicate_type)
 
     def save_shared_data(self):
-        """Store the user input data for the start of the CRISPR screen analysis program."""
+        """Store the user input data for the start of the CRISPR screen core program."""
         # Iterate through shared_data and store values as strings
         for key, variable in self.controller.shared_data.items():
             # Get the value of the variable and convert it to string/int

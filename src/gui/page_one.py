@@ -1,10 +1,10 @@
 import tkinter.ttk as ttk
-from base_frame import BaseFrame
-from input_validation_gui import InputValidatorGUI
+from src.gui.base_frame import BaseFrame
+from src.core.input_validation_gui import InputValidatorGUI
 
 
 class StartPage(BaseFrame):
-    """Start page of the CRISPR screen analysis tool."""
+    """Start page of the CRISPR screen core tool."""
 
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
@@ -19,8 +19,8 @@ class StartPage(BaseFrame):
             "Library File": controller.shared_data["library_file"]
         }
 
-        self.create_header("Welcome to the CRISPR screen analysis tool")
-        self.create_description("Welcome to the CRISPR screen analysis tool for the identification\n"
+        self.create_header("Welcome to the CRISPR screen core tool")
+        self.create_description("Welcome to the CRISPR screen core tool for the identification\n"
                                 "of drug-gene interactions using DrugZ! This tool is designed to analyze\n"
                                 "CRISPR screens and identify potential drug-gene interactions. To get started,\n"
                                 "please provide the following parameters:")
@@ -67,7 +67,7 @@ class StartPage(BaseFrame):
     @staticmethod
     def get_next_class():
         """Get the next class for navigation."""
-        from page_two import PageTwo
+        from src.gui.page_two import PageTwo
 
         # Return the next class
         return PageTwo

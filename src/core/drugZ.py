@@ -1,7 +1,7 @@
 # DRUGZ (modified version): Script for the identification of drug-gene interactions in
 # paired sample genomic perturbation screens
 # original version: https://github.com/hart-lab/drugz
-# Last modified 03.10.2024
+# Last modified 14.12.2025
 # ------------------------------------
 import sys
 import numpy as np
@@ -44,13 +44,13 @@ min_reads_thresh = 1
 
 def check_input(reads, reference_sample, target_sample, replicates, unpaired):
     """
-    This function verifies the input to avoid errors that occur during the analysis.
+    This function verifies the input to avoid errors that occur during the core.
 
     :param reads: The dataset with the reads
     :param reference_sample: A list with the name of the reference_sample
     :param target_sample: A list with the name of the target_sample
     :param replicates: A boolean indicating the presence of replicates in the dataframe reads
-    :param unpaired: A boolean indicating whether the analysis is run in an unpaired (True) or paired (False) mode
+    :param unpaired: A boolean indicating whether the core is run in an unpaired (True) or paired (False) mode
 
     :return: new_reference_sample, new_target_sample: The names of the replicate columns for
     reference_sample and target_sample
@@ -80,7 +80,7 @@ def check_input(reads, reference_sample, target_sample, replicates, unpaired):
     # Check if the lengths of the target_sample and reference_sample are the same in case unpaired is False
     if len(new_reference_sample) != len(new_target_sample) and unpaired is False:
         raise ValueError("The number of target samples and reference samples must be the same to "
-                         "run the paired DrugZ analysis.")
+                         "run the paired DrugZ core.")
 
     return new_reference_sample, new_target_sample
 
@@ -97,7 +97,10 @@ def load_reads(filepath, index_column, genes_to_remove):
     """
 
     # Load the input file with guide IDs as row IDs
-    reads = pd.read_csv(filepath, index_col=index_column, delimiter='\t')
+    if len(filepath) > 1:
+        raise RuntimeError(f"Multiple files found: {filepath}")
+
+    reads = pd.read_csv(filepath[0], index_col=index_column, delimiter='\t')
 
     # Remove genes specified in genes_to_remove
     if genes_to_remove:
@@ -238,7 +241,7 @@ def calculate_gene_drugz_score(per_gene_score, min_observations):
 
     :param per_gene_score: Data frame containing calculated z-scores per comparison
     :param min_observations: An integer value to act as a threshold for the minimum number observations to be included
-    in the analysis (default=1)
+    in the core (default=1)
 
     :return: per_gene_results: A dataframe of summary statistics for each gene
     """
@@ -307,37 +310,37 @@ def write_drugz_output(outfile, output):
 
     return fout
 
-
-def get_args():
-    """ Parse user giver arguments"""
-
-    parser = argparse.ArgumentParser(description='DrugZ for chemogenetic interaction screens',
-                                     epilog='dependencies: pylab, pandas')
-    parser._optionals.title = "Options"
-    parser.add_argument("-i", dest="infile", type=argparse.FileType('r'), metavar="sgRNA_count.txt",
-                        help="sgRNA read count file", default=sys.stdin)
-    parser.add_argument("-o", dest="drugz_output_file", type=argparse.FileType('w'), metavar="drugz-output.txt",
-                        help="drugz output file", default=sys.stdout)
-    parser.add_argument("-f", dest="fc_outfile", type=argparse.FileType('w'), metavar="drugz fold-change.txt",
-                        help="drugz normalized fold-change file (optional")
-    parser.add_argument("-c", dest="reference_sample", metavar="reference sample", required=True,
-                        help="reference samples, comma delimited")
-    parser.add_argument("-x", dest="target_sample", metavar="target sample", required=True,
-                        help="target samples, comma delimited")
-    parser.add_argument("-r", dest="remove_genes", metavar="remove genes", help="genes to remove, comma delimited")
-    parser.add_argument("-p", dest="pseudocount", type=int, metavar="pseudocount", help="pseudocount (default=5)",
-                        default=5)
-    parser.add_argument("-I", dest="index_column", type=int,
-                        help="Index column in the input file (default=0; GENE_CLONE column)", default=0)
-    parser.add_argument("--minobs", dest="minObs", type=int, metavar="minObs", help="min number of obs (default=1)",
-                        default=1)
-    parser.add_argument("--half_window_size", dest="half_window_size", type=int, metavar="half_window_size",
-                        help="width of variance-estimation window", default=500)
-    parser.add_argument("-unpaired", dest="unpaired", action='store_true', default=False,
-                        help='comparison status, paired (default) or unpaired')
-    parser.add_argument("-replicates", dest="replicates", action='store_true', default=False,
-                        help='replicates in the input file, True or False (default)')
-    return parser.parse_args()
+#
+# def get_args():
+#     """ Parse user giver arguments"""
+#
+#     parser = argparse.ArgumentParser(description='DrugZ for chemogenetic interaction screens',
+#                                      epilog='dependencies: pylab, pandas')
+#     parser._optionals.title = "Options"
+#     parser.add_argument("-i", dest="infile", type=argparse.FileType('r'), metavar="sgRNA_count.txt",
+#                         help="sgRNA read count file", default=sys.stdin)
+#     parser.add_argument("-o", dest="drugz_output_file", type=argparse.FileType('w'), metavar="drugz-output.txt",
+#                         help="drugz output file", default=sys.stdout)
+#     parser.add_argument("-f", dest="fc_outfile", type=argparse.FileType('w'), metavar="drugz fold-change.txt",
+#                         help="drugz normalized fold-change file (optional")
+#     parser.add_argument("-c", dest="reference_sample", metavar="reference sample", required=True,
+#                         help="reference samples, comma delimited")
+#     parser.add_argument("-x", dest="target_sample", metavar="target sample", required=True,
+#                         help="target samples, comma delimited")
+#     parser.add_argument("-r", dest="remove_genes", metavar="remove genes", help="genes to remove, comma delimited")
+#     parser.add_argument("-p", dest="pseudocount", type=int, metavar="pseudocount", help="pseudocount (default=5)",
+#                         default=5)
+#     parser.add_argument("-I", dest="index_column", type=int,
+#                         help="Index column in the input file (default=0; GENE_CLONE column)", default=0)
+#     parser.add_argument("--minobs", dest="minObs", type=int, metavar="minObs", help="min number of obs (default=1)",
+#                         default=1)
+#     parser.add_argument("--half_window_size", dest="half_window_size", type=int, metavar="half_window_size",
+#                         help="width of variance-estimation window", default=500)
+#     parser.add_argument("-unpaired", dest="unpaired", action='store_true', default=False,
+#                         help='comparison status, paired (default) or unpaired')
+#     parser.add_argument("-replicates", dest="replicates", action='store_true', default=False,
+#                         help='replicates in the input file, True or False (default)')
+#     return parser.parse_args()
 
 
 def calculate_unpaired_foldchange(reads, normalized_counts, target_sample, reference_sample, pseudocount):
@@ -372,13 +375,13 @@ def calculate_unpaired_foldchange(reads, normalized_counts, target_sample, refer
 
 
 def drugz_analysis(args):
-    """ Call all functions and run DrugZ analysis
+    """ Call all functions and run DrugZ core
 
     :param args: User given arguments
     :return gene_normZ: normalized read counts
     """
 
-    log_.debug("Initiating analysis")
+    log_.debug("Initiating core")
 
     target_sample = str(args.target_sample)
     reference_sample = str(args.reference_sample)
@@ -425,8 +428,8 @@ def drugz_analysis(args):
         fold_change = fold_change.merge(gRNA_stds, how="left", on="GENE")
         fold_change.set_index(gRNA_names, inplace=True)
 
-        if args.gRNA_outfile:
-            fold_change.to_csv(args.gRNA_outfile, sep='\t', float_format='%4.3f')
+        if args.gRNA_output_file:
+            fold_change.to_csv(args.gRNA_output_file, sep='\t', float_format='%4.3f')
 
         # Sum up the fold-changes from sgRNAs for each gene
         per_gene_scores = pd.DataFrame(
@@ -439,7 +442,7 @@ def drugz_analysis(args):
         log_.debug('Writing output file unpaired results')
         write_drugz_output(outfile=args.drugz_output_file, output=gene_normZ)
 
-        log_.debug('Finished the analysis.')
+        log_.debug('Finished the core.')
 
         return gene_normZ
 
@@ -467,8 +470,8 @@ def drugz_analysis(args):
         fold_changes = pd.concat(fold_changes, axis=1, sort=False)
         fold_changes = fold_changes.loc[:, ~fold_changes.columns.duplicated()]
 
-        if args.gRNA_outfile:
-            fold_changes.to_csv(args.gRNA_outfile, sep='\t', float_format='%4.3f')
+        if args.gRNA_output_file:
+            fold_changes.to_csv(args.gRNA_output_file, sep='\t', float_format='%4.3f')
 
         log_.debug('Calculating gene-level z-scores')
         # This is going to produce a per gene summation of the z-scores for each comparison. Missing values are
@@ -483,5 +486,5 @@ def drugz_analysis(args):
         log_.debug('Writing output file paired results')
         write_drugz_output(outfile=args.drugz_output_file, output=gene_normZ)
 
-        log_.debug('Finished the analysis.')
+        log_.debug('Finished the core.')
         return gene_normZ
