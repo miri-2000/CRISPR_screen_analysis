@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from src.core.analysis_tools import run_script, assign_type
+from core.analysis_tools import run_script, assign_type
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)
@@ -39,6 +39,7 @@ class ResultAnalysis:
         log_.debug("Computing log2 fold changes from drugz results")
 
         # Read the provided input files
+        drugz_input_path = drugz_input
         drugz_input = pd.read_csv(drugz_input, sep="\t")
         essential_genes = pd.read_csv(essential_genes)
         non_essential_genes = pd.read_csv(non_essential_genes)
@@ -62,7 +63,7 @@ class ResultAnalysis:
             input_file_format = fr"drugz_{comparison}.txt"
 
             # Read the DrugZ output file
-            input_file = pd.read_csv(fr".\drugz\{input_file_format}", sep="\t")
+            input_file = pd.read_csv(Path(drugz_input_path).parent / "drugz" / input_file_format, sep="\t")
 
             # Rename the first column to ensure consistent naming
             input_file.rename(columns={input_file.columns[0]: "Gene"}, inplace=True)
@@ -98,11 +99,12 @@ class ResultAnalysis:
                 log2df_all = pd.merge(log2df_all, log2df, on=["Gene", "type"])
 
         # Store the dataframe in a csv file
-        log2df_all.to_csv(r".\drugz_log2fcs_all.csv", index=False, sep=";")
+        output_file = Path(drugz_input_path).parent / "drugz_log2fcs_all.csv"
+        log2df_all.to_csv(output_file, index=False, sep=";")
 
         # Start the execution of R_analysis_2
         log_.info("Creating significance plots\n")
-        log2fc_all = os.path.abspath("drugz_log2fcs_all.csv")
+        log2fc_all = str(output_file)
         run_script(Path(__file__).parents[0] / "R_analysis_2.R",
                    additional_args=[log2fc_all, ",".join(target_samples), ",".join(reference_samples), x_axis,
                                     str(threshold_fdr),

@@ -1,5 +1,5 @@
 import sys
-from src.core.input_validation import InputValidator
+from core.input_validation import InputValidator
 
 
 class InputValidatorCL(InputValidator):

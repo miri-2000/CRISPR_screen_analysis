@@ -1,14 +1,15 @@
-from src.core.start_program import CRISPRScreenAnalysis
+from core.start_program import CRISPRScreenAnalysis
 from pathlib import Path
-from src.core.input_validation_cl import InputValidatorCL
+from core.input_validation_cl import InputValidatorCL
 
 
 class Args:
     def __init__(self):
-        self.input_file = Path(__file__).parents[1] / "example" / "5994_example_screen_read_counts.txt"
-        self.essential_genes = Path(__file__).parents[1] / "example" / "essential_genes.csv"
-        self.non_essential_genes = Path(__file__).parents[1] / "example" / "non_essential_genes.csv"
-        self.library_file = Path(__file__).parents[1] / "example" / "library_file.txt"
+        base_dir = Path(__file__).resolve().parents[1]
+        self.input_file = base_dir / "example" / "5994_example_screen_read_counts.txt"
+        self.essential_genes = base_dir / "example" / "essential_genes.csv"
+        self.non_essential_genes = base_dir / "example" / "non_essential_genes.csv"
+        self.library_file = base_dir / "example" / "library_file.txt"
         self.target_samples = "t7,t29"
         self.reference_samples = "t0,t7"
         self.unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
@@ -21,7 +22,8 @@ class Args:
         self.distribution_condition1 = "t7"
         self.distribution_condition2 = "t0"
         self.replicate_type = "biological"  # or "technical"
-        self.working_dir = Path(__file__).parents[1] / "temp_out"
+        self.working_dir = base_dir / "output"
+        self.working_dir.mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
