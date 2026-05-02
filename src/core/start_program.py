@@ -42,9 +42,9 @@
 import os
 from pathlib import Path
 import logging as log
-from core.data_preparation import DataPreparation
-from core.result_analysis import ResultAnalysis
-from core.analysis_tools import run_script
+from .data_preparation import DataPreparation
+from .result_analysis import ResultAnalysis
+from .analysis_tools import run_script
 
 log.basicConfig(level=log.INFO)
 log_ = log.getLogger(__name__)

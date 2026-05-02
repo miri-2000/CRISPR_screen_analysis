@@ -1,6 +1,6 @@
-from core.start_program import CRISPRScreenAnalysis
 from pathlib import Path
-from core.input_validation_cl import InputValidatorCL
+from .core.start_program import CRISPRScreenAnalysis
+from .core.input_validation_cl import InputValidatorCL
 
 
 class Args:
