@@ -125,8 +125,11 @@ class CRISPRScreenAnalysis:
 
         input_folder = CRISPRScreenAnalysis.results_folder(working_dir)
 
+        target_samples_arg = ",".join(target_samples) if isinstance(target_samples, (list, tuple)) else str(target_samples)
+        reference_samples_arg = ",".join(reference_samples) if isinstance(reference_samples, (list, tuple)) else str(reference_samples)
+
         run_script(Path(__file__).parent / "run_drugz.py",
-                   additional_args=[input_folder,target_samples, reference_samples])
+                   additional_args=[input_folder, target_samples_arg, reference_samples_arg])
 
     @staticmethod
     def calculate_log2fc(dataset, target_samples, reference_samples, essential_genes, non_essential_genes, x_axis,
@@ -137,11 +140,14 @@ class CRISPRScreenAnalysis:
 
         log_.info(f"Calculating log2 fold-changes between the target and reference sample")
 
+        target_samples_arg = ",".join(target_samples) if isinstance(target_samples, (list, tuple)) else str(target_samples)
+        reference_samples_arg = ",".join(reference_samples) if isinstance(reference_samples, (list, tuple)) else str(reference_samples)
+
         # Call result core function here
         result_analysis = ResultAnalysis()
         result_analysis.create_drugz_log2fc(drugz_input=f"{dataset}_drugz-input.txt",
-                                            target_samples=target_samples,
-                                            reference_samples=reference_samples,
+                                            target_samples=target_samples_arg,
+                                            reference_samples=reference_samples_arg,
                                             essential_genes=essential_genes,
                                             non_essential_genes=non_essential_genes,
                                             x_axis=x_axis,
