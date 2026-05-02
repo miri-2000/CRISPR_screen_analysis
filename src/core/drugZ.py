@@ -310,39 +310,6 @@ def write_drugz_output(outfile, output):
 
     return fout
 
-#
-# def get_args():
-#     """ Parse user giver arguments"""
-#
-#     parser = argparse.ArgumentParser(description='DrugZ for chemogenetic interaction screens',
-#                                      epilog='dependencies: pylab, pandas')
-#     parser._optionals.title = "Options"
-#     parser.add_argument("-i", dest="infile", type=argparse.FileType('r'), metavar="sgRNA_count.txt",
-#                         help="sgRNA read count file", default=sys.stdin)
-#     parser.add_argument("-o", dest="drugz_output_file", type=argparse.FileType('w'), metavar="drugz-output.txt",
-#                         help="drugz output file", default=sys.stdout)
-#     parser.add_argument("-f", dest="fc_outfile", type=argparse.FileType('w'), metavar="drugz fold-change.txt",
-#                         help="drugz normalized fold-change file (optional")
-#     parser.add_argument("-c", dest="reference_sample", metavar="reference sample", required=True,
-#                         help="reference samples, comma delimited")
-#     parser.add_argument("-x", dest="target_sample", metavar="target sample", required=True,
-#                         help="target samples, comma delimited")
-#     parser.add_argument("-r", dest="remove_genes", metavar="remove genes", help="genes to remove, comma delimited")
-#     parser.add_argument("-p", dest="pseudocount", type=int, metavar="pseudocount", help="pseudocount (default=5)",
-#                         default=5)
-#     parser.add_argument("-I", dest="index_column", type=int,
-#                         help="Index column in the input file (default=0; GENE_CLONE column)", default=0)
-#     parser.add_argument("--minobs", dest="minObs", type=int, metavar="minObs", help="min number of obs (default=1)",
-#                         default=1)
-#     parser.add_argument("--half_window_size", dest="half_window_size", type=int, metavar="half_window_size",
-#                         help="width of variance-estimation window", default=500)
-#     parser.add_argument("-unpaired", dest="unpaired", action='store_true', default=False,
-#                         help='comparison status, paired (default) or unpaired')
-#     parser.add_argument("-replicates", dest="replicates", action='store_true', default=False,
-#                         help='replicates in the input file, True or False (default)')
-#     return parser.parse_args()
-
-
 def calculate_unpaired_foldchange(reads, normalized_counts, target_sample, reference_sample, pseudocount):
     """
     Function that calculates the unpaired fold-change for each guide.
