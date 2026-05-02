@@ -467,6 +467,9 @@ conditions2 <- strsplit(args[6], ',')[[1]]
 distribution_condition1 <- as.character(args[7])
 distribution_condition2 <- as.character(args[8])
 
+# If no distribution conditions were provided, disable distribution plotting.
+plotDistr <- distribution_condition1 != "" && distribution_condition2 != ""
+
 data <- reads %>%
   select_if(is.numeric)
 annotations <- reads %>%
@@ -483,7 +486,7 @@ plotNormRankPlot=T
 plotRawNormBarplots=T
 plotCountsDensity <- F
 createQualityPlots=T
-plotDistr=T
+plotDistr <- distribution_condition1 != "" && distribution_condition2 != ""
 corrPlotPerRep=F
 doCorrPlotAll=F
 
