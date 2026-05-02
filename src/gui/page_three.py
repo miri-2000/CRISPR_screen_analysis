@@ -152,7 +152,7 @@ class PageThree(BaseFrame):
     @staticmethod
     def get_previous_class():
         """Get the next class for navigation."""
-        from page_two import PageTwo
+        from .page_two import PageTwo
 
         # Return the previous class
         return PageTwo

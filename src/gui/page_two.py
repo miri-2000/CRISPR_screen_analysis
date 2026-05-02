@@ -57,14 +57,14 @@ class PageTwo(BaseFrame):
 
     @staticmethod
     def get_previous_class():
-        from page_one import StartPage
+        from .page_one import StartPage
 
         # Return the previous class
         return StartPage
 
     @staticmethod
     def get_next_class():
-        from src.gui.page_three import PageThree
+        from .page_three import PageThree
 
         # Return the next class
         return PageThree
