@@ -3,9 +3,9 @@ name: Build and Push Dev Container
 on:
   push:
     branches: ["master","development"]
-    paths:
-      - ".devcontainer/Dockerfile"
-      - ".devcontainer/devcontainer.json"
+    # paths:
+    #   - ".devcontainer/Dockerfile"
+    #   - ".devcontainer/devcontainer.json"
 
 permissions:
   contents: read
