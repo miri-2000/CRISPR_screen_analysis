@@ -6,21 +6,21 @@
 
 2. Follow this instruction to configure Docker for Windows using WSL: https://docs.docker.com/desktop/features/wsl/
 
-3. Open the container in your IDE (eg Positron) by clicking the Command Palette and searching for "Dev containers: Build container".
+3. Open the container in your IDE (eg Visual Studio Code) by clicking the Command Palette and searching for "Dev containers: Build container".
 
-4. The program can be run in different modes. 
+4. The program can be run in different modes. For the purpose of the tutorial, an example dataset is used below. More information about the example data can be found in the [Example run](#example-run) section.
 
 If you want to use the command line, run: 
    ```cmd
-python -m src.cli.main   --input /workspaces/CRISPR_screen_analysis/example/5994_example_screen_read_counts.txt   --output /workspaces/CRISPR_screen_analysis/output   --target-samples t7 t29   --reference-samples t0 t7   --essential-genes /workspaces/CRISPR_screen_analysis/example/essential_genes.csv   --non-essential-genes /workspaces/CRISPR_screen_analysis/example/non_essential_genes.csv   --library-file /workspaces/CRISPR_screen_analysis/example/library_file.txt
+python -m src.cli.main   --input /workspaces/CRISPR_screen_analysis/example/input/5994_example_screen_read_counts.txt   --output /workspaces/CRISPR_screen_analysis/output   --target-samples t7 t29   --reference-samples t0 t7   --essential-genes /workspaces/CRISPR_screen_analysis/example/input/essential_genes.csv   --non-essential-genes /workspaces/CRISPR_screen_analysis/example/input/non_essential_genes.csv   --library-file /workspaces/CRISPR_screen_analysis/example/input/library_file.txt
    ```
 
 If you want a GUI, run:
    ```cmd
-   python -m src.launch_app
+   python -m src.gui.launch_app
    ```
 
-If you want to do a file based launch, run:
+If you want to do a file based launch, edit the script src/file_based_launch.py with your input parameters and run:
    run:
    ```cmd
    python -m src.file_based_launch

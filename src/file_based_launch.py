@@ -6,10 +6,10 @@ from .core.input_validation_cl import InputValidatorCL
 class Args:
     def __init__(self):
         base_dir = Path(__file__).resolve().parents[1]
-        self.input_file = base_dir / "example" / "5994_example_screen_read_counts.txt"
-        self.essential_genes = base_dir / "example" / "essential_genes.csv"
-        self.non_essential_genes = base_dir / "example" / "non_essential_genes.csv"
-        self.library_file = base_dir / "example" / "library_file.txt"
+        self.input_file = base_dir / "example" / "input" / "5994_example_screen_read_counts.txt"
+        self.essential_genes = base_dir / "example" / "input" / "essential_genes.csv"
+        self.non_essential_genes = base_dir / "example" / "input" / "non_essential_genes.csv"
+        self.library_file = base_dir / "example" / "input" / "library_file.txt"
         self.target_samples = "t7,t29"
         self.reference_samples = "t0,t7"
         self.unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
