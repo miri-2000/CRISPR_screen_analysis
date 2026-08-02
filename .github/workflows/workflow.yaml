@@ -35,6 +35,10 @@ jobs:
       with:
         name: coverage-report
         path: coverage.xml
+    - name: Install Codecov dependencies # temporary, will be added to image
+      run: |
+        apt-get update
+        apt-get install -y gnupg
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
       with:
