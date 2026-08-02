@@ -1,3 +1,8 @@
+![Tests](https://github.com/miri-2000/CRISPR_screen_analysis/actions/workflows/ship.yml/badge.svg)
+[![codecov](https://codecov.io/gh/<miri-2000>/CRISPR_screen_analysis/branch/master/graph/badge.svg)](https://codecov.io/gh/<miri-2000>/CRISPR_screen_analysis)
+![Ruff](https://github.com/astral-sh/ruff-action/actions/workflows/main.yml/badge.svg)
+![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)
+
 # Steps for the CRISPR screen analysis
 
 ## Windows Setup

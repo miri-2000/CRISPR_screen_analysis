@@ -28,7 +28,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
     - name: Run tests
-      run: uv run pytest test/test_workflow.py --cov=./ --cov-report=xml
+      run: uv run pytest --cov=./ --cov-report=xml --cov-fail-under=80
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        files: ./coverage.xml
     - name: Lint with ruff
       run: |
         # stop the build if there are Python syntax errors or undefined names
