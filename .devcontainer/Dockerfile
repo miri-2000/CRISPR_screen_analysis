@@ -18,7 +18,7 @@ RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin:$PATH"
 
 # Install Python packages
-RUN uv pip install --system pandas numpy scipy pytest
+RUN uv pip install --system pandas numpy scipy pytest ruff
 
 # Install CRAN packages used by the analysis scripts. Do not install Suggests here:
 # ggpubr's optional dependency tree pulls in many build-time extras.
