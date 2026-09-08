@@ -12,8 +12,8 @@
 from pathlib import Path
 import pandas as pd
 import re
-from src.core.analysis_tools import assign_type, run_script
-from src.core.file_input import read_file
+from .analysis_tools import assign_type, run_script
+from .file_input import read_file
 import logging as log
 
 log.basicConfig(level=log.DEBUG)
@@ -470,8 +470,13 @@ class DataPreparation:
         # Remove the replicate notation ("_r1") from the condition names
         conditions_new = [condition.rsplit('_', 1)[0] for condition in conditions]
 
+        target_samples_arg = ",".join(target_samples) if isinstance(target_samples, (list, tuple)) else str(target_samples)
+        reference_samples_arg = ",".join(reference_samples) if isinstance(reference_samples, (list, tuple)) else str(reference_samples)
+        distribution_condition1_arg = distribution_condition1 or ""
+        distribution_condition2_arg = distribution_condition2 or ""
+
         log_.debug("Normalizing data and creating quality control plots\n")
         run_script(Path(__file__).parent / "R_analysis_1.R",
                    additional_args=[output_file, dataset, ",".join(conditions_new), replicate_type,
-                                    target_samples, reference_samples, distribution_condition1,
-                                    distribution_condition2])
+                                    target_samples_arg, reference_samples_arg, distribution_condition1_arg,
+                                    distribution_condition2_arg])

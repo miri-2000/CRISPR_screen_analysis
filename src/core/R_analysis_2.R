@@ -36,12 +36,12 @@ addTheme <- function(plot,base) {
 # Create guide-level significance plots
 create_gRNA_plots <- function(significant_genes,gRNA_comparison,sel,title,thFdr=-log10(0.05)) {
   # create a directory for each comparison to store store the gRNA plots in
-  output_dir=paste(".//drugz//",gRNA_comparison,sep="")
+  output_dir=file.path(input_dir, "drugz", gRNA_comparison)
   if (!file.exists(output_dir)) {
     # If it doesn't exist, create it
     dir.create(output_dir)
   } 
-  gRNA_file= read.csv(paste("drugz//gRNA_",gRNA_comparison,".txt",sep=""),stringsAsFactors = F,sep="\t")
+  gRNA_file= read.csv(file.path(input_dir, "drugz", paste("gRNA_",gRNA_comparison,".txt",sep="")),stringsAsFactors = F,sep="\t")
   
   gRNA_normZ=gRNA_file[gRNA_file$GENE %in% significant_genes$Gene,]
   for (gene in unique(gRNA_normZ$GENE)){
@@ -271,7 +271,7 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
     
     for (type in plotformat){
       comparison_filename <- gsub("\\.","-",comparison)
-      ggsave(plot=plot,filename =paste("drugz/drugz_",comparison_filename,"_plot.",type,sep=""),width=ncol*widthBase,height=nrow * heightBase,limitsize = F)
+      ggsave(plot=plot,filename = file.path(input_dir, "drugz", paste("drugz_",comparison_filename,"_plot.",type,sep="")),width=ncol*widthBase,height=nrow * heightBase,limitsize = F)
     }  
   }  
 }
@@ -279,6 +279,8 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
 
 
 args <- commandArgs(trailingOnly = TRUE)
+
+input_dir = dirname(args[1])
 
 data <- read.csv(as.character(args[1]),stringsAsFactors = F,sep=";")
 print(colnames(data))

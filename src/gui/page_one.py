@@ -1,6 +1,6 @@
 import tkinter.ttk as ttk
-from src.gui.base_frame import BaseFrame
-from src.core.input_validation_gui import InputValidatorGUI
+from .base_frame import BaseFrame
+from ..core.input_validation_gui import InputValidatorGUI
 
 
 class StartPage(BaseFrame):
@@ -67,7 +67,7 @@ class StartPage(BaseFrame):
     @staticmethod
     def get_next_class():
         """Get the next class for navigation."""
-        from src.gui.page_two import PageTwo
+        from .page_two import PageTwo
 
         # Return the next class
         return PageTwo

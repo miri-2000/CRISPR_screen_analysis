@@ -1,5 +1,5 @@
 from tkinter import messagebox
-from src.core.input_validation import InputValidator
+from .input_validation import InputValidator
 
 
 class InputValidatorGUI(InputValidator):

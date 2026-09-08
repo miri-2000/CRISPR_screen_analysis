@@ -3,7 +3,7 @@
 # by the user.
 # Last modified 14.12.2025
 # ------------------------------------
-from src.core import drugZ
+import drugZ
 import os
 import sys
 from pathlib import Path
@@ -12,8 +12,8 @@ from pathlib import Path
 class Args:
     def __init__(self):
         self.infile = list(Path(sys.argv[1]).glob("*_drugz-input.txt"))
-        self.drugz_output = "./drugz/drugz_"
-        self.gRNA_output = "./drugz/gRNA_"
+        self.drugz_output = str(Path(sys.argv[1]) / "drugz" / "drugz_")
+        self.gRNA_output = str(Path(sys.argv[1]) / "drugz" / "gRNA_")
         self.target_samples = sys.argv[2]
         self.reference_samples = sys.argv[3]
         self.remove_genes = None
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     reference_samples_list = args.reference_samples.split(',')
 
     # Create a DrugZ output folder (if it does not exist yet)
-    os.makedirs("./drugz", exist_ok=True)
+    os.makedirs(Path(sys.argv[1]) / "drugz", exist_ok=True)
 
     # Call the drugZ_analysis function for each pair of target_sample and reference_sample
     for target_sample, reference_sample in zip(target_samples_list, reference_samples_list):

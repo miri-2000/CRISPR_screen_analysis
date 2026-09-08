@@ -932,6 +932,17 @@ getCorrelationPlots <- function(
     x1 <- x
   }
 
+  # If fewer than two numeric columns remain, no pairwise correlations can be made.
+  if (ncol(x1) < 2) {
+    warning("Not enough columns for correlation plots: need at least two numeric columns.")
+    return(list(plots = list(), corr = data.frame(
+      col1 = character(0),
+      col2 = character(0),
+      r.squared = numeric(0),
+      pearson.corr = numeric(0)
+    )))
+  }
+
   # generate a dataframe for all pairwise comparisons
   print(colnames(x1))
   y <- combn(ncol(x1), 2)
@@ -1089,16 +1100,21 @@ correlationPlots <- function(
 
     jpeg(paste(outputFile, ".jpg", sep = ""), width = width, height = height) #in px
 
-    #Apparently one more than 10 plots, a ex1tra top layer of list is created
-    # Therefore check if the first layers are plot, if not remove the first layer of list
-    cl <- class(plots[[1]])
-    # if (!("ggplot" %in% unlist(cl)))
-    #   plots <- unlist(plots,recursive=F)
-    args <- c(plots, list(nrow = nrow, ncol = ncol))
-    print(length(plots))
-    print(nrow)
-    print(ncol)
-    do.call(grid.arrange, args = args)
+    if (length(plots) == 0) {
+      plot.new()
+      text(0.5, 0.5, "No correlation plots could be generated", cex = 2)
+    } else {
+      #Apparently one more than 10 plots, a ex1tra top layer of list is created
+      # Therefore check if the first layers are plot, if not remove the first layer of list
+      cl <- class(plots[[1]])
+      # if (!("ggplot" %in% unlist(cl)))
+      #   plots <- unlist(plots,recursive=F)
+      args <- c(plots, list(nrow = nrow, ncol = ncol))
+      print(length(plots))
+      print(nrow)
+      print(ncol)
+      do.call(grid.arrange, args = args)
+    }
     dev.off()
   }
 

@@ -1,33 +1,34 @@
+![Tests](https://github.com/miri-2000/CRISPR_screen_analysis/actions/workflows/ship.yml/badge.svg)
+[![codecov](https://codecov.io/gh/miri-2000/CRISPR_screen_analysis/branch/development/graph/badge.svg)](https://codecov.io/gh/miri-2000/CRISPR_screen_analysis)
+![Ruff](https://github.com/astral-sh/ruff-action/actions/workflows/main.yml/badge.svg)
+![Docker](https://img.shields.io/badge/docker-ghcr.io-blue)
+
 # Steps for the CRISPR screen analysis
 
 ## Windows Setup
 
-1. Download [Anaconda](https://www.anaconda.com/download) (conda: 4.13.0)
+1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 
-2. Open the Anaconda prompt and change into a folder location of your choice to store the program
+2. Follow this instruction to configure Docker for Windows using WSL: https://docs.docker.com/desktop/features/wsl/
 
-3. Paste the following into the prompt
+3. Open the container in your IDE (eg Visual Studio Code) by clicking the Command Palette and searching for "Dev containers: Build container".
 
+4. The program can be run in different modes. For the purpose of the tutorial, an example dataset is used below. More information about the example data can be found in the [Example run](#example-run) section.
+
+If you want to use the command line, run: 
    ```cmd
-    conda install anaconda::git
-    git clone https://github.com/miri-2000/CRISPR_screen_analysis.git
-    cd CRISPR_screen_analysis/scripts
-    conda env create -f environment.yml
-    conda activate crispr_env
-    Rscript install_r_packages.R
-    python launch_app.py
+python -m src.cli.main   --input /workspaces/CRISPR_screen_analysis/example/input/5994_example_screen_read_counts.txt   --output /workspaces/CRISPR_screen_analysis/output   --target-samples t7 t29   --reference-samples t0 t7   --essential-genes /workspaces/CRISPR_screen_analysis/example/input/essential_genes.csv   --non-essential-genes /workspaces/CRISPR_screen_analysis/example/input/non_essential_genes.csv   --library-file /workspaces/CRISPR_screen_analysis/example/input/library_file.txt
    ```
-   You should now see a window that allows you to type in the CRISPR screen parameters
 
-4. Fill out the parameters prompted in the window.
-   In case you would rather use a file to directly write in your parameters, adapt the "file_based_launch.py"
-   with your parameters and instead of running:
+If you want a GUI, run:
    ```cmd
-   python launch_app.py
+   python -m src.gui.launch_app
    ```
+
+If you want to do a file based launch, edit the script src/file_based_launch.py with your input parameters and run:
    run:
    ```cmd
-   python file_based_launch.py
+   python -m src.file_based_launch
    ```
 
 5. If the analysis went well, the run will end with "Analysis of the given dataset completed". In case you want to run
@@ -42,7 +43,7 @@
 
 * In order to run the example after performing the set up, run the command with the default parameters:
    ```cmd
-   python file_based_launch.py
+   python -m src.file_based_launch
    ```
 * The results will be stored in "example/results"
 
