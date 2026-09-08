@@ -3,8 +3,6 @@ name: Ship CRISPR workflow
 on:
   push:
     branches: ["master","development"]
-  pull_request:
-    branches: ["master","development"]
 
 permissions:
   contents: read
@@ -13,11 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        # Test all supported Python versions under Ubuntu
         os: [ubuntu-latest]
-        # os: [ubuntu-latest, windows-latest, macos-latest]
-
-        python-version: ['3.12', '3.13', '3.14']
 
     runs-on: ${{ matrix.os }}
 
