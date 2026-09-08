@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     r-base-core=4.5.0-3 \
     r-base-dev=4.5.0-3 \
+    gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
