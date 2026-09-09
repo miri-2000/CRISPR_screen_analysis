@@ -2,15 +2,13 @@
 
 # Steps for the CRISPR screen analysis
 
-## Windows Setup
+## Setup
 
-1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/) and [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
+1. Download [Docker Desktop](https://www.docker.com/products/docker-desktop/). If you have a Windows PC, make sure [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) is installed. Follow this instruction to configure Docker for Windows using WSL: https://docs.docker.com/desktop/features/wsl/
 
-2. Follow this instruction to configure Docker for Windows using WSL: https://docs.docker.com/desktop/features/wsl/
+2. Open the container in your IDE (eg Visual Studio Code) by clicking the Command Palette and searching for "Dev containers: Build container".
 
-3. Open the container in your IDE (eg Visual Studio Code) by clicking the Command Palette and searching for "Dev containers: Build container".
-
-4. The program can be run in different modes. For the purpose of the tutorial, an example dataset is used below. More information about the example data can be found in the [Example run](#example-run) section.
+3. The program can be run in different modes. For the purpose of the tutorial, an example dataset is used below. More information about the example data can be found in the [Example run](#example-run) section.
 
 If you want to use the command line, run: 
    ```cmd
@@ -28,7 +26,7 @@ If you want to do a file based launch, edit the script src/file_based_launch.py 
    python -m src.file_based_launch
    ```
 
-5. If the analysis went well, the run will end with "Analysis of the given dataset completed". In case you want to run
+4. If the analysis went well, the run will end with "Analysis of the given dataset completed". In case you want to run
    another screen analysis just modify the input parameters in the screen window. If you are done, close the window to
    stop the program.
 
