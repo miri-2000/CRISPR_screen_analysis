@@ -134,7 +134,6 @@ create_plots <- function(data,target_samples,reference_samples,x.axis="normZ",th
       columns_per_selection=columns
       print(columns_per_selection)
       print(setdiff(columns_per_selection, colnames(data)))
-      threshold_fdr <- 0.25
       
       if (selection=="pos") {
         thLfc <- 1
