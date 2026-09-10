@@ -6,13 +6,19 @@ from .core.input_validation_cl import InputValidatorCL
 class Args:
     def __init__(self):
         base_dir = Path(__file__).resolve().parents[1]
-        self.input_file = base_dir / "example" / "input" / "5994_example_screen_read_counts.txt"
+        self.input_file = (
+            base_dir / "example" / "input" / "5994_example_screen_read_counts.txt"
+        )
         self.essential_genes = base_dir / "example" / "input" / "essential_genes.csv"
-        self.non_essential_genes = base_dir / "example" / "input" / "non_essential_genes.csv"
+        self.non_essential_genes = (
+            base_dir / "example" / "input" / "non_essential_genes.csv"
+        )
         self.library_file = base_dir / "example" / "input" / "library_file.txt"
         self.target_samples = "t7,t29"
         self.reference_samples = "t0,t7"
-        self.unwanted_columns = "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
+        self.unwanted_columns = (
+            "guide_mm1_mismatch1,mismatch1_,nohit_cols,guide_mm1_nohit"
+        )
         self.unwanted_rows = ""
         self.unwanted_row_substrings = ":mismatch"
         self.threshold_reads = 0
@@ -30,13 +36,38 @@ if __name__ == "__main__":
     args = Args()
 
     validator = InputValidatorCL()
-    validator.validate(args.input_file, args.essential_genes, args.non_essential_genes, args.library_file,
-                       args.threshold_reads, args.top, args.threshold_fdr, args.x_axis, args.replicate_type,
-                       args.working_dir)
+    validator.validate(
+        args.input_file,
+        args.essential_genes,
+        args.non_essential_genes,
+        args.library_file,
+        args.target_samples,
+        args.reference_samples,
+        args.threshold_reads,
+        args.top,
+        args.threshold_fdr,
+        args.x_axis,
+        args.replicate_type,
+        args.working_dir,
+    )
 
     analysis = CRISPRScreenAnalysis()
-    analysis.run_analysis(args.working_dir, args.input_file, args.target_samples, args.reference_samples,
-                          args.essential_genes, args.non_essential_genes, args.library_file, args.unwanted_columns,
-                          args.unwanted_rows, args.unwanted_row_substrings, args.threshold_reads, args.x_axis,
-                          args.threshold_fdr, args.top, args.distribution_condition1, args.distribution_condition2,
-                          args.replicate_type)
+    analysis.run_analysis(
+        args.working_dir,
+        args.input_file,
+        args.target_samples,
+        args.reference_samples,
+        args.essential_genes,
+        args.non_essential_genes,
+        args.library_file,
+        args.unwanted_columns,
+        args.unwanted_rows,
+        args.unwanted_row_substrings,
+        args.threshold_reads,
+        args.x_axis,
+        args.threshold_fdr,
+        args.top,
+        args.distribution_condition1,
+        args.distribution_condition2,
+        args.replicate_type,
+    )

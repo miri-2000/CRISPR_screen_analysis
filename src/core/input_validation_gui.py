@@ -6,13 +6,18 @@ class InputValidatorGUI(InputValidator):
     def __init__(self):
         super().__init__()
 
-    def validate_page_one(self, file_paths):
-        input_file = file_paths['Screen Result File'].get()
-        essential_genes = file_paths['Essential Genes File'].get()
-        non_essential_genes = file_paths['Non-Essential Genes File'].get()
-        library_file = file_paths['Library File'].get()
+    def validate_page_one(self, file_paths, target_samples, reference_samples):
+        input_file = file_paths["Screen Result File"].get()
+        essential_genes = file_paths["Essential Genes File"].get()
+        non_essential_genes = file_paths["Non-Essential Genes File"].get()
+        library_file = file_paths["Library File"].get()
 
-        if not self.validate_files(input_file, essential_genes, non_essential_genes, library_file):
+        if not self.validate_samples(target_samples.get(), reference_samples.get()):
+            return False
+
+        if not self.validate_files(
+            input_file, essential_genes, non_essential_genes, library_file
+        ):
             return False
 
         return True
@@ -36,4 +41,4 @@ class InputValidatorGUI(InputValidator):
         return True
 
     def abort(self, message):
-        messagebox.showinfo('Input Error', message)
+        messagebox.showinfo("Input Error", message)

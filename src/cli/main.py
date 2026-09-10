@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 from ..core.start_program import CRISPRScreenAnalysis
+from ..core.input_validation_cl import InputValidatorCL
 
 
 @dataclass
@@ -27,6 +28,21 @@ class RunConfig:
 
 
 def run_pipeline(cfg: RunConfig):
+    validator = InputValidatorCL()
+    validator.validate(
+        cfg.input_file,
+        cfg.essential_genes,
+        cfg.non_essential_genes,
+        cfg.library_file,
+        cfg.target_samples,
+        cfg.reference_samples,
+        cfg.threshold_reads,
+        cfg.top,
+        cfg.threshold_fdr,
+        cfg.x_axis,
+        cfg.replicate_type,
+        cfg.output_dir,
+    )
     analysis = CRISPRScreenAnalysis()
     analysis.run_analysis(
         working_dir=str(cfg.output_dir),
@@ -80,7 +96,6 @@ def main():
                         help="Replicate type (default: biological)")
 
     args = parser.parse_args()
-
     cfg = RunConfig(
         input_file=Path(args.input),
         output_dir=Path(args.output),
@@ -95,8 +110,12 @@ def main():
         x_axis=args.x_axis,
         distribution_condition1=args.distribution_condition1,
         distribution_condition2=args.distribution_condition2,
-        replicate_type=args.replicate_type,
+        replicate_type=args.replicate_type
     )
+
+    cfg.output_dir.mkdir(parents=True, exist_ok=True)
+
+
 
     run_pipeline(cfg)
 
